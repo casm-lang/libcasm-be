@@ -52,6 +52,8 @@ CPPOBJECTS += obj/LLCodeBackend.o
 CPPOBJECTS += obj/CasmIRToLLCodePass.o
 
 INCLUDE += -I ./src
+INCLUDE += -I ./src/analyze
+INCLUDE += -I ./src/transform
 INCLUDE += -I ../
 INCLUDE += -I ../pass/src
 INCLUDE += -I ../casm-ir/src
@@ -62,6 +64,14 @@ obj:
 	mkdir -p obj
 
 obj/%.o: src/%.cpp
+	@echo "CPP " $<
+	@$(CPP) $(CPPFLAG) $(INCLUDE) -c $< -o $@
+
+obj/%.o: src/analyze/%.cpp
+	@echo "CPP " $<
+	@$(CPP) $(CPPFLAG) $(INCLUDE) -c $< -o $@
+
+obj/%.o: src/transform/%.cpp
 	@echo "CPP " $<
 	@$(CPP) $(CPPFLAG) $(INCLUDE) -c $< -o $@
 
