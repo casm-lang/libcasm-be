@@ -49,9 +49,11 @@ TARGET += libcasm-be.a
 
 CPPOBJECTS += obj/Backend.o
 CPPOBJECTS += obj/LLCodeBackend.o
+CPPOBJECTS += obj/CasmIRToLLCodePass.o
 
 INCLUDE += -I ./src
 INCLUDE += -I ../
+INCLUDE += -I ../pass/src
 INCLUDE += -I ../casm-ir/src
 
 default: obj $(TARGET)
