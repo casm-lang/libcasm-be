@@ -82,17 +82,23 @@ const char* LLCodeBackend::getRegister( Value* value, u1 let_flag )
 	return register_cache[ value ].c_str();
 }
 
-
+const char* getType( Type* t );
 
 const char* getType( Value* value )
 {
 	Type* t = value->getType();
-	assert( t );
 	
 	if( Value::isa< Function >( value ) )
 	{
 		t = t->getResultType();
 	}
+	
+	return getType( t );
+}
+
+const char* getType( Type* t )
+{
+	assert( t );
 	
 	u64 uid = t->getID();
 	
@@ -434,80 +440,27 @@ void LLCodeBackend::emit( FILE* f, Function* ir )
 		fprintf( f, "define linkonce_odr i8* %s.location() #0\n", getRegister( ir ) );
 		fprintf( f, "{\n");
 		fprintf( f, "begin:\n");
-		
-		fprintf( f, INDENT "%%ptr = getelementptr %%libcasm-rt.%s* %s, i64 0\n"
-		, getType( ir )
-		, getRegister( ir )
-		);
-		
+		fprintf( f, INDENT "%%ptr = getelementptr %%libcasm-rt.%s* %s, i64 0\n", getType( ir ), getRegister( ir ) );
 		fprintf( f, INDENT "%%loc = bitcast %%libcasm-rt.%s* %%ptr to i8*\n", getType( ir )	);
-		
 		fprintf( f, INDENT "ret i8* %%loc\n" );
 		fprintf( f, "}\n");
-
-		// // lookup
-		// fprintf
-		// ( f
-		// , "define linkonce_odr %%libcasm-rt.%s* %s.lookup( "
-		//   "%%libcasm-rt.updateset* %%uset, i64 %%loc ) alwaysinline\n"
-		// , getType( ir )
-		// , getRegister( ir )
-		// );
-		// fprintf( f, "{\n");
-	    
-		// fprintf( f, "%sret %%libcasm-rt.%s* undef\n", INDENT, getType( ir ) );
-		// fprintf( f, "}\n");
-		
-		// // update
-		// fprintf
-		// ( f
-		// , "define linkonce_odr void %s.update( "
-		//   "%%libcasm-rt.updateset* %%uset, i64 %%loc, %%libcasm-rt.%s* %%value ) alwaysinline\n"
-		// , getRegister( ir )
-		// , getType( ir )
-		// );
-		// fprintf( f, "{\n");
-
-		// fprintf( f, INDENT "%%dic = getelementptr %%libcasm-rt.updateset* %%uset, i32 0, i32 0\n" );
-		// fprintf( f, INDENT "%%mem = getelementptr %%stdll.dict* %%dic, i32 0, i32 3\n" );
-		
-		// fprintf
-		// ( f
-		// , INDENT "%%_val = getelementptr %%libcasm-rt.%s* %%value, i32 0, i32 0\n"
-		// , getType( ir )
-		// );
-
-		// fprintf
-		// ( f
-		// , INDENT "%%_def = getelementptr %%libcasm-rt.%s* %%value, i32 0, i32 0\n"
-		// , getType( ir )
-		// );
-		
-		// fprintf( f, INDENT "%%val = load i64* %%_val\n" );
-		// fprintf( f, INDENT "%%def = load i1*  %%_def\n" );
-
-		
-		// // alloc an update and insert it to uset
-		// fprintf( f, INDENT "%%upd = call %%libcasm-rt.update* %%libcasm-rt.update.new"
-		// 		 "( %%stdll.mem* %%mem, i64 %%val, i1 %%def )\n"
-		// 	);
-		
-		// // // fprintf
-		// // // ( f
-		// // // , "%s; %s = call i8* @libcasm-rt.updateset.insert( "
-		// // //   "%%libcasm-rt.updateset* %%.uset, i64 0, i64 0"
-		// // //   ")\n"
-		// // // , indent.str().c_str()
-		// // // , getRegister( ir )
-		// // // //, ir->getName()
-		// // // );
-		
-		// fprintf( f, "%sret void\n", INDENT );
-		// fprintf( f, "}\n");
-
 	}
 	else
 	{
+	    // trivial data-type!
+		fprintf
+		( f
+		, "; %s %s <-- "
+		, getRegister( ir ), getType( ir )
+		);
+		for( auto value : ir->getType()->getParameters() )
+		{
+			fprintf( f, "%s, ", getType( value ) );
+		}
+		fprintf( f, "\n" );
+	// }
+	// else
+	// {
 		assert( 0 && "n-ary functions not implemented yet!" );
 	}
 }
@@ -615,33 +568,47 @@ void LLCodeBackend::emit( FILE* f, LocationInstruction* ir )
 	Value* func = ir->getValue( 0 );
 	Type* tfunc = func->getType();
 	
-	if( tfunc->getParameters().size() == 0 )
+	fprintf
+	( f
+	, "%s%s = call i8* @%s.location( "
+	, indent.str().c_str()
+	, getRegister( ir )
+	, func->getName()
+	);
+	
+	if( tfunc->getParameters().size() != 0 )
 	{
-		fprintf
-		( f
-		, "%s%s = call i8* @%s.location()\n"
-		, indent.str().c_str()
-		, getRegister( ir )
-		, func->getName()
-		);
-	}
-	else
-	{
+		// PPA: this is currently only a special case becase we only have one Agent!
 		if( std::string( func->getName() ).compare( "program" ) == 0 )
 		{
-			fprintf
-			( f
-			, "%s%s = call i8* @%s.location( i8* null )\n"
-			, indent.str().c_str()
-			, getRegister( ir )
-			, func->getName()
-			);
-			return;
+			assert( tfunc->getParameters().size() == 1 );
+			
+			fprintf( f, "i8* null" );
 		}
-		
-		assert( 0 && "unimplemented!" );
-	}
+		else
+		{
+			assert( tfunc->getParameters().size() == (ir->getValues().size() - 1) );
 
+			i32 cnt = 0;
+			for( auto value : ir->getValues() )
+			{
+				cnt++;
+				if( cnt == 1 )
+				{
+					continue;
+				}
+				if( cnt != 2 )
+				{
+					fprintf( f, ", " );
+				}
+				
+				fprintf( f, "%%libcasm-rt.%s* %s", getType( value ), getRegister( value ) );
+			}
+		}
+	}
+	
+	fprintf( f, " )\n" );
+	
 	lifetime_start( f, ir );
 }
 
@@ -651,36 +618,26 @@ void LLCodeBackend::emit( FILE* f, LookupInstruction* ir )
 	getIndent( indent, ir );
 
 	Value*  loc = ir->getValue( 0 );
-	Value* func = ((LocationInstruction*)loc)->getValue( 0 );
-	Type* tfunc = func->getType();
 	
-	if( tfunc->getParameters().size() == 0 )
-	{
-		fprintf
-		( f
-		, "%s%s.lup = call i8* @libcasm-rt.lookup( %%libcasm-rt.updateset* %%.uset, i8* %s )\n"
-		, indent.str().c_str()
-		, getRegister( ir )
-		, getRegister( loc )
-		);
+	fprintf
+	( f
+	, "%s%s.lup = call i8* @libcasm-rt.lookup( %%libcasm-rt.updateset* %%.uset, i8* %s )\n"
+	, indent.str().c_str()
+	, getRegister( ir )
+	, getRegister( loc )
+	);
 		
-		lifetime_end( f, (Instruction*)loc );
+	lifetime_end( f, (Instruction*)loc );
 
-		fprintf
-		( f
-		, "%s%s = bitcast i8* %s.lup to %%libcasm-rt.%s*\n"
-		, indent.str().c_str()
-		, getRegister( ir )
-		, getRegister( ir )
-		, getType( ir )
-		);
-		
-	}
-	else
-	{
-		assert( 0 && "unimplemented!" );
-	}
-
+	fprintf
+	( f
+    , "%s%s = bitcast i8* %s.lup to %%libcasm-rt.%s*\n"
+	, indent.str().c_str()
+	, getRegister( ir )
+	, getRegister( ir )
+	, getType( ir )
+	);
+	
 	lifetime_start( f, ir );
 }
 
@@ -689,44 +646,17 @@ void LLCodeBackend::emit( FILE* f, UpdateInstruction* ir )
 	std::stringstream indent;
 	getIndent( indent, ir );
 
-	Value*  loc = ir->getLHS();
-	Value* func = ((LocationInstruction*)loc)->getValue( 0 );
-	Type* tfunc = func->getType();
-    
-	if( tfunc->getParameters().size() == 0 )
-	{
-		fprintf
-		( f
-		, "%scall void @libcasm-rt.update.%s( "
-		  "%%libcasm-rt.updateset* %%.uset, i8* %s, %%libcasm-rt.%s* %s"
-		  ")\n"
-		, indent.str().c_str()
-		, getType( ir )
-		, getRegister( ir->getLHS() )
-		, getType( ir->getRHS() )
-		, getRegister( ir->getRHS() )
-		);
-	}
-	else
-	{
-		if( std::string( func->getName() ).compare( "program" ) == 0 )
-		{
-		    fprintf
-		    ( f
-		    , "%scall void @libcasm-rt.update.%s( "
-		      "%%libcasm-rt.updateset* %%.uset, i8* %s, %%libcasm-rt.%s* %s"
-		      ")\n"
-		    , indent.str().c_str()
-		    , getType( ir )
-		    , getRegister( ir->getLHS() )
-		    , getType( ir->getRHS() )
-		    , getRegister( ir->getRHS() )
-		    );
-			return;
-		}
-		
-		assert( 0 && "unimplemented!" );
-	}
+	fprintf
+	( f
+	, "%scall void @libcasm-rt.update.%s( "
+	  "%%libcasm-rt.updateset* %%.uset, i8* %s, %%libcasm-rt.%s* %s"
+	  ")\n"
+	, indent.str().c_str()
+	, getType( ir )
+	, getRegister( ir->getLHS() )
+	, getType( ir->getRHS() )
+	, getRegister( ir->getRHS() )
+	);
 	
 	if( Value::isa< Instruction >( ir->getLHS() ) )
 	{
