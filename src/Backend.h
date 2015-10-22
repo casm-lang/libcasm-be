@@ -63,6 +63,8 @@ namespace libcasm_be
 		virtual void emit( FILE* f, libcasm_ir::BranchStatement* ir ) = 0;
 		
 		virtual void emit( FILE* f, libcasm_ir::BranchInstruction* ir ) = 0;
+
+		virtual void emit( FILE* f, libcasm_ir::SwitchInstruction* ir ) = 0;
 		
 		virtual void emit( FILE* f, libcasm_ir::LocationInstruction* ir ) = 0;
 		virtual void emit( FILE* f, libcasm_ir::LookupInstruction* ir ) = 0;

@@ -88,7 +88,10 @@ const char* getType( Value* value )
 {
 	Type* t = value->getType();
 	
-	if( Value::isa< Function >( value ) )
+	if( Value::isa< Function >( value )
+	 or Value::isa< Derived  >( value )
+	 or Value::isa< Builtin  >( value )
+	 	)
 	{
 		t = t->getResultType();
 	}
@@ -121,6 +124,10 @@ const char* getType( Type* t )
 	else if( uid == StringType.getID() )
 	{
 		return "Str";
+	}
+	else if( t->getIDKind() == Type::ID::BIT )
+	{
+		return std::string( "Bit" + std::to_string( t->getBitsize() ) ).c_str();
 	}
 	else
 	{
@@ -560,6 +567,113 @@ void LLCodeBackend::emit( FILE* f, BranchInstruction* ir )
 }
 
 
+void LLCodeBackend::emit( FILE* f, SwitchInstruction* ir )
+{
+	std::stringstream indent;
+	getIndent( indent, ir );
+
+	Value* expr = ir->getValue(0);
+
+	const Statement* br_val = ir->getStatement();
+	assert( Value::isa< BranchStatement >( br_val ) );
+	BranchStatement* br_stmt = (BranchStatement*)br_val;
+
+	const std::vector< Value* >& inst = ir->getValues();
+	const std::vector< Block* >& blks = br_stmt->getBlocks();
+
+	const char* switch_bits = 0;
+	const char* default_reg = 0;
+
+	switch( expr->getType()->getIDKind() )
+	{
+	    case Type::ID::BOOLEAN:
+		{
+			switch_bits = "i2";
+			break;
+		}
+	    case Type::ID::INTEGER:
+		{
+			switch_bits = "i65";
+			break;
+		}
+	    case Type::ID::BIT:
+		{
+			switch_bits = std::string( "i" + std::to_string( expr->getType()->getBitsize() + 1 ) ).c_str();
+			break;
+		}
+	    default:
+		{
+			assert( !" unimplemented case type" );
+		}
+	}
+	
+	if( (inst.size() - 1) ==  blks.size() )
+	{
+		// no default case!
+		default_reg = getRegister( br_stmt );
+	}
+	else if( inst.size() ==  blks.size() )
+	{
+		// default case is last block!
+		default_reg = getRegister( blks.back() );
+	}
+	else
+	{
+		assert( !" invalid switch instruction and branch statement combination! " );
+	}
+	
+	fprintf
+	( f
+	, "%s%s = call %s @libcasm-rt.switch.%s( %%libcasm-rt.%s* %s )\n"
+	, indent.str().c_str()
+	, getRegister( ir )
+	, switch_bits
+    , getType( expr )
+	, getType( expr )
+	, getRegister( expr )
+	);
+
+	for( u32 i = 1; i < inst.size(); i++ )
+	{
+		Value* swcase = inst[i];
+
+		assert( expr->getType()->getID() == swcase->getType()->getID() && " invalid case statement! " );
+		
+		fprintf
+		( f
+		, "%s%s.case = call %s @libcasm-rt.switch.%s( %%libcasm-rt.%s* %s )\n"
+		, indent.str().c_str()
+		, getRegister( swcase )
+		, switch_bits
+		, getType( swcase )
+		, getType( swcase )
+		, getRegister( swcase )
+		);
+	}
+	
+	fprintf
+	( f
+	, "%sswitch %s %s, label %%%s ["
+	, indent.str().c_str()
+	, switch_bits
+	, getRegister( ir )
+	, default_reg
+	);
+	
+	for( u32 i = 1; i < inst.size(); i++ )
+	{
+		fprintf( f, " %s %s.case, label %%%s", switch_bits, getRegister( inst[i] ), getRegister( blks[i-1] ) );
+	}
+	
+	fprintf( f, " ]\n" );
+	
+	// ; Implement a jump table:
+	// switch i64 %val, label %otherwise [ i64 0, label %onzero
+	// 									i64 1, label %onone
+	// 									i64 2, label %ontwo ]
+}
+
+
 void LLCodeBackend::emit( FILE* f, LocationInstruction* ir )
 {
 	std::stringstream indent;
@@ -578,7 +692,7 @@ void LLCodeBackend::emit( FILE* f, LocationInstruction* ir )
 	
 	if( tfunc->getParameters().size() != 0 )
 	{
-		// PPA: this is currently only a special case becase we only have one Agent!
+		// PPA: this is currently only a special case because we only have one Agent!
 		if( std::string( func->getName() ).compare( "program" ) == 0 )
 		{
 			assert( tfunc->getParameters().size() == 1 );
@@ -670,16 +784,23 @@ void LLCodeBackend::emit( FILE* f, UpdateInstruction* ir )
 
 void LLCodeBackend::emit( FILE* f, CallInstruction* ir )
 {
-	//emit_instruction( f, ir );
+	std::stringstream indent;
+	getIndent( indent, ir ); 
+
+	assert(0);
+	// fprintf
+	// ( f
+	//   , "%scall void "
+	// );
+	//   call void %rule( %libcasm-rt.updateset* %uset )
+	
+	
 	fprintf( stderr, "+++ FIXME +++: %s:%i: %s\n", __FILE__, __LINE__, __FUNCTION__ );
 }
 
 void LLCodeBackend::emit( FILE* f, PrintInstruction* ir )
 {
-	//emit_instruction( f, ir );
-	//fprintf( stderr, "+++ FIXME +++: %s:%i: %s\n", __FILE__, __LINE__, __FUNCTION__ );
-	
-	std::stringstream indent;
+    std::stringstream indent;
 	getIndent( indent, ir ); 
 	
 	for( auto value : ir->getValues() )
