@@ -44,6 +44,7 @@ namespace libcasm_be
 	private:
 		u64 register_count;
 		u64 label_count;
+		u1 derived_mode;
 		
 		std::unordered_map< libcasm_ir::Value*, std::string > register_cache;
 		const char* getRegister( libcasm_ir::Value* value, u1 let_flag = false );
@@ -61,6 +62,7 @@ namespace libcasm_be
 		virtual void emit( FILE* f, libcasm_ir::RulePointerConstant* ir );
 		virtual void emit( FILE* f, libcasm_ir::BooleanConstant* ir );
 		virtual void emit( FILE* f, libcasm_ir::IntegerConstant* ir );
+		virtual void emit( FILE* f, libcasm_ir::BitConstant* ir );
 		virtual void emit( FILE* f, libcasm_ir::StringConstant* ir );
 		
 		virtual void emit( FILE* f, libcasm_ir::Function* ir );
@@ -82,7 +84,10 @@ namespace libcasm_be
 		virtual void emit( FILE* f, libcasm_ir::UpdateInstruction* ir );
 		virtual void emit( FILE* f, libcasm_ir::CallInstruction* ir );
 		virtual void emit( FILE* f, libcasm_ir::PrintInstruction* ir );
-		virtual void emit( FILE* f, libcasm_ir::LetInstruction* ir );		
+		virtual void emit( FILE* f, libcasm_ir::LetInstruction* ir );
+
+		virtual void emit( FILE* f, libcasm_ir::AssertInstruction* ir );
+		
 		virtual void emit( FILE* f, libcasm_ir::AddInstruction* ir );
 		virtual void emit( FILE* f, libcasm_ir::SubInstruction* ir );
 		virtual void emit( FILE* f, libcasm_ir::MulInstruction* ir );

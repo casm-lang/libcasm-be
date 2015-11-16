@@ -91,6 +91,11 @@ bool CasmIRToLLCodePass::run( libpass::PassResult& pr )
 	
 	for( auto value : symbols[".constant"] )
 	{
+		// if( Value::isa< ConstantValue >( value ) )
+		// {
+		// 	emit( output, value) ;
+		// }
+		// else
 		if( Value::isa< AgentConstant >( value ) )
 		{
 			emit( output, ((AgentConstant*)value) );
@@ -106,6 +111,10 @@ bool CasmIRToLLCodePass::run( libpass::PassResult& pr )
 		else if( Value::isa< IntegerConstant >( value ) )
 		{
 			emit( output, ((IntegerConstant*)value) );
+		}
+		else if( Value::isa< BitConstant >( value ) )
+		{
+			emit( output, ((BitConstant*)value) );
 		}
 		else if( Value::isa< StringConstant >( value ) )
 		{

@@ -75,7 +75,14 @@ const char* LLCodeBackend::getRegister( Value* value, u1 let_flag )
 	}
 	else
 	{
-		register_cache[ value ] = std::string( "%.r" + cnt );
+		if( derived_mode and Value::isa< Identifier >( value ) )
+		{
+			return "derived_mode_ident"; // PPA: TODO: FIXME: CONT'D HERE!!!
+		}
+		else
+		{
+			register_cache[ value ] = std::string( "%.r" + cnt );
+		}
 	}
 	
 	register_count++;	
@@ -153,7 +160,11 @@ static void getIndent( std::stringstream& indent, Statement* ir )
 	assert( Value::isa< Statement >( ir ) );
 	
 	indent << INDENT;
-	getIndent( indent, ((ExecutionSemanticsBlock*)ir->getScope()) );
+
+	if( ir->getScope() )
+	{
+		getIndent( indent, ((ExecutionSemanticsBlock*)ir->getScope()) );
+	}
 }
 
 static void getIndent( std::stringstream& indent, Instruction* ir )
@@ -407,6 +418,17 @@ void LLCodeBackend::emit( FILE* f, IntegerConstant* ir )
 	emit_constant( f, ir, "i64", to_string( ir->getValue() ).c_str(), ir->isDefined() );
 }
 
+void LLCodeBackend::emit( FILE* f, BitConstant* ir )
+{
+	emit_constant
+	( f
+	, ir
+	, std::string( "i" + to_string( ir->getType()->getBitsize() ) ).c_str()
+	, to_string( ir->getValue()[0] ).c_str()
+	, ir->isDefined()
+	);
+}
+
 void LLCodeBackend::emit( FILE* f, StringConstant* ir )
 {
 	std::string s( ir->getValue() );
@@ -434,7 +456,38 @@ void LLCodeBackend::emit( FILE* f, StringConstant* ir )
 
 void LLCodeBackend::emit( FILE* f, Function* ir )
 {
-	if( ir->getType()->getParameters().size() == 0 )
+	u1 bound = true;
+
+	const std::vector< Type* >& params = ir->getType()->getParameters();
+
+	
+	fprintf( f, "; %s : ", getRegister( ir ) );
+	for( auto ty : params )
+	{
+		fprintf( f, "%s, ", getType( ty ) );
+		
+		switch( ty->getIDKind() )
+		{
+		    case Type::ID::INTEGER:
+			{
+				bound = false;
+				break;
+			}
+		    case Type::ID::BIT:
+			{
+				if( ty->getBitsize() > 12 )
+				{
+					bound = false;
+				}
+				break;
+			}
+		    default:
+				assert( !" unimplemented parameter type! " );
+		}
+	}
+	fprintf( f, " -> %s\n", getType( ir ) );
+	
+	if( params.size() == 0 )
 	{
 		// trivial data-type!
 		fprintf
@@ -454,36 +507,83 @@ void LLCodeBackend::emit( FILE* f, Function* ir )
 	}
 	else
 	{
-	    // trivial data-type!
-		fprintf
-		( f
-		, "; %s %s <-- "
-		, getRegister( ir ), getType( ir )
-		);
-		for( auto value : ir->getType()->getParameters() )
+		if( params.size() == 1 and bound )
 		{
-			fprintf( f, "%s, ", getType( value ) );
+			if( params[0]->getIDKind() == Type::ID::BIT )
+			{
+				fprintf
+				( f
+				, "%s = global [ %s x %%libcasm-rt.%s ] zeroinitializer\n"
+				, getRegister( ir )
+				, std::to_string( (i32)std::pow( 2, params[0]->getBitsize() ) ).c_str()
+				, getType( ir )
+				);
+				
+				// location
+				fprintf
+				( f
+				, "define linkonce_odr i8* %s.location( %%libcasm-rt.%s %%arg ) #0\n"
+				, getRegister( ir )
+			    , getType( params[0] )
+				);
+				fprintf( f, "{\n");
+				fprintf( f, "begin:\n");
+				fprintf( f, INDENT "%%ptr = getelementptr %%libcasm-rt.%s* %s, i64 0\n", getType( ir ), getRegister( ir ) );
+				fprintf( f, INDENT "%%loc = bitcast %%libcasm-rt.%s* %%ptr to i8*\n", getType( ir )	);
+				fprintf( f, INDENT "ret i8* %%loc\n" );
+				fprintf( f, "}\n");
+			}
+			else
+			{
+				assert( 0 && "1-ary 'bound' function parameter not implemented yet!" );
+			}
 		}
-		fprintf( f, "\n" );
-	// }
-	// else
-	// {
-		assert( 0 && "n-ary functions not implemented yet!" );
+		else if( params.size() == 1 and params[0]->getIDKind() == Type::ID::INTEGER )
+		{
+			fprintf
+			( f
+			, "; %s = global TODO [ %%libcasm-rt.%s ] zeroinitializer\n"
+			, getRegister( ir ), getType( ir )
+			);			
+		}
+		else
+		{
+			assert( 0 && "n-ary functions not implemented yet!" );
+		}
 	}
 }
 
 void LLCodeBackend::emit( FILE* f, Derived* ir )
 {
-	fprintf( f, "define linkonce_odr void @%s() #0\n", ir->getName() );
+    fprintf( stderr, "+++ FIXME +++: %s:%i: derived with no arguments generation!!!\n", __FILE__, __LINE__ );
+
+	derived_mode = true;
+    register_count = 0;	
+	label_count = 0;
+	
+	fprintf
+	( f
+	, "define linkonce_odr %%libcasm-rt.%s @%s( " 
+	, getType( ir )
+	, ir->getName()
+	);
+
+	
+	//" ) #0\n"
+	// PPA: FIXME: CONT'D HERE!!!!
+	
 	fprintf( f, "{\n" );
 	fprintf( f, "begin:\n");
-		
-	register_count = 0;	
-	label_count = 0;
-
+	
 	emit( f, ir->getContext() );
 	
-	fprintf( f, "%sret void\n", INDENT );
+	fprintf
+	( f
+	, "%sret %%libcasm-rt.%s %%r0\n"
+	, INDENT
+	, getType( ir )
+	);
+	
 	fprintf( f, "}\n" );
 	fprintf( f, "\n" );
 }
@@ -493,7 +593,8 @@ void LLCodeBackend::emit( FILE* f, Rule* ir )
 	fprintf( f, "define linkonce_odr void @%s( %%libcasm-rt.updateset* %%.uset ) #0\n", ir->getName() );
 	fprintf( f, "{\n" );
 	fprintf( f, "begin:\n");
-		
+
+	derived_mode = false;
 	register_count = 0;
 	label_count = 0;
 	
@@ -567,6 +668,29 @@ void LLCodeBackend::emit( FILE* f, BranchInstruction* ir )
 }
 
 
+static u64 switch_bits( Value* ir )
+{
+	switch( ir->getType()->getIDKind() )
+	{
+	    case Type::ID::BOOLEAN:
+		{
+			return 2;
+		}
+	    case Type::ID::INTEGER:
+		{
+			return 65;
+		}
+	    case Type::ID::BIT:
+		{
+		    return ir->getType()->getBitsize() + 1;
+		}
+	    default:
+		{
+			assert( !" unimplemented case type" );
+		}
+	}
+}
+
 void LLCodeBackend::emit( FILE* f, SwitchInstruction* ir )
 {
 	std::stringstream indent;
@@ -581,31 +705,8 @@ void LLCodeBackend::emit( FILE* f, SwitchInstruction* ir )
 	const std::vector< Value* >& inst = ir->getValues();
 	const std::vector< Block* >& blks = br_stmt->getBlocks();
 
-	const char* switch_bits = 0;
 	const char* default_reg = 0;
-
-	switch( expr->getType()->getIDKind() )
-	{
-	    case Type::ID::BOOLEAN:
-		{
-			switch_bits = "i2";
-			break;
-		}
-	    case Type::ID::INTEGER:
-		{
-			switch_bits = "i65";
-			break;
-		}
-	    case Type::ID::BIT:
-		{
-			switch_bits = std::string( "i" + std::to_string( expr->getType()->getBitsize() + 1 ) ).c_str();
-			break;
-		}
-	    default:
-		{
-			assert( !" unimplemented case type" );
-		}
-	}
+	
 	
 	if( (inst.size() - 1) ==  blks.size() )
 	{
@@ -624,15 +725,15 @@ void LLCodeBackend::emit( FILE* f, SwitchInstruction* ir )
 	
 	fprintf
 	( f
-	, "%s%s = call %s @libcasm-rt.switch.%s( %%libcasm-rt.%s* %s )\n"
+	, "%s%s = call i%lu @libcasm-rt.switch.%s( %%libcasm-rt.%s* %s )\n"
 	, indent.str().c_str()
 	, getRegister( ir )
-	, switch_bits
+	, switch_bits( ir )
     , getType( expr )
 	, getType( expr )
 	, getRegister( expr )
 	);
-
+	
 	for( u32 i = 1; i < inst.size(); i++ )
 	{
 		Value* swcase = inst[i];
@@ -641,10 +742,11 @@ void LLCodeBackend::emit( FILE* f, SwitchInstruction* ir )
 		
 		fprintf
 		( f
-		, "%s%s.case = call %s @libcasm-rt.switch.%s( %%libcasm-rt.%s* %s )\n"
+		, "%s%s.case%i = call i%lu @libcasm-rt.switch.%s( %%libcasm-rt.%s* %s )\n"
 		, indent.str().c_str()
-		, getRegister( swcase )
-		, switch_bits
+		, getRegister( ir )
+		, (i - 1)
+	    , switch_bits( ir )
 		, getType( swcase )
 		, getType( swcase )
 		, getRegister( swcase )
@@ -653,16 +755,23 @@ void LLCodeBackend::emit( FILE* f, SwitchInstruction* ir )
 	
 	fprintf
 	( f
-	, "%sswitch %s %s, label %%%s ["
+	, "%sswitch i%lu %s, label %%%s ["
 	, indent.str().c_str()
-	, switch_bits
+    , switch_bits( ir )
 	, getRegister( ir )
 	, default_reg
 	);
 	
 	for( u32 i = 1; i < inst.size(); i++ )
 	{
-		fprintf( f, " %s %s.case, label %%%s", switch_bits, getRegister( inst[i] ), getRegister( blks[i-1] ) );
+		fprintf
+		( f
+		, " i%lu %s.case%i, label %%%s"
+		, switch_bits( ir )
+		, getRegister( ir )
+		, (i - 1)
+	    , getRegister( blks[i-1] )
+		);
 	}
 	
 	fprintf( f, " ]\n" );
@@ -786,16 +895,50 @@ void LLCodeBackend::emit( FILE* f, CallInstruction* ir )
 {
 	std::stringstream indent;
 	getIndent( indent, ir ); 
+	
+	const char* call_reg = 0;
+	
+	Value* symbol = ir->getValue(0);
+	
+	if( Value::isa< Builtin >( symbol ) 
+	or  Value::isa< Derived >( symbol )
+	)
+	{
+		call_reg = std::string( "%%libcasm-rt." + std::string(  ) ).c_str();
 
-	assert(0);
-	// fprintf
-	// ( f
-	//   , "%scall void "
-	// );
-	//   call void %rule( %libcasm-rt.updateset* %uset )
-	
-	
-	fprintf( stderr, "+++ FIXME +++: %s:%i: %s\n", __FILE__, __LINE__, __FUNCTION__ );
+		fprintf
+		( f
+		, "%s%s = call %%libcasm-rt.%s %%libcasm-rt.%s( "
+		, indent.str().c_str()
+		, getRegister( ir )
+		, getType( ir )
+		, symbol->getName()
+		);
+		
+		i32 cnt = 0;
+		for( auto value : ir->getValues() )
+		{
+			cnt++;
+			if( cnt == 1 )
+			{
+				continue;
+			}
+			if( cnt != 2 )
+			{
+				fprintf( f, ", " );
+			}
+			
+			fprintf( f, "%%libcasm-rt.%s* %s", getType( value ), getRegister( value ) );
+		}
+	    
+		fprintf( f, " )\n" );
+	}
+	else
+	{
+		ir->dump();
+		symbol->dump();
+		assert( !" unimplemented call symbol " );
+	}
 }
 
 void LLCodeBackend::emit( FILE* f, PrintInstruction* ir )
@@ -832,6 +975,15 @@ void LLCodeBackend::emit( FILE* f, LetInstruction* ir )
 	  , indent.str().c_str(), let_type, expr_type, let_type, let_name, expr_type, expr_name
 	);
 }
+
+void LLCodeBackend::emit( FILE* f, AssertInstruction* ir )
+{
+	std::stringstream indent;
+	getIndent( indent, ir ); 
+		
+	fprintf( f, "%s;; assert instr. TODO\n", indent.str().c_str() );
+}
+
 
 void LLCodeBackend::emit( FILE* f, AddInstruction* ir ) { emit_instruction( f, ir ); }
 void LLCodeBackend::emit( FILE* f, SubInstruction* ir ) { emit_instruction( f, ir ); }

@@ -50,6 +50,7 @@ namespace libcasm_be
 		virtual void emit( FILE* f, libcasm_ir::AgentConstant* ir ) = 0;
 		virtual void emit( FILE* f, libcasm_ir::BooleanConstant* ir ) = 0;
 		virtual void emit( FILE* f, libcasm_ir::IntegerConstant* ir ) = 0;
+		virtual void emit( FILE* f, libcasm_ir::BitConstant* ir ) = 0;
 		virtual void emit( FILE* f, libcasm_ir::StringConstant* ir ) = 0;
 		
 		virtual void emit( FILE* f, libcasm_ir::Function* ir ) = 0;
@@ -71,7 +72,10 @@ namespace libcasm_be
 		virtual void emit( FILE* f, libcasm_ir::UpdateInstruction* ir ) = 0;
 		virtual void emit( FILE* f, libcasm_ir::CallInstruction* ir ) = 0;
 		virtual void emit( FILE* f, libcasm_ir::PrintInstruction* ir ) = 0;
-		virtual void emit( FILE* f, libcasm_ir::LetInstruction* ir ) = 0;		
+		virtual void emit( FILE* f, libcasm_ir::LetInstruction* ir ) = 0;
+
+		virtual void emit( FILE* f, libcasm_ir::AssertInstruction* ir ) = 0;
+		
 		virtual void emit( FILE* f, libcasm_ir::AddInstruction* ir ) = 0;
 		virtual void emit( FILE* f, libcasm_ir::SubInstruction* ir ) = 0;
 		virtual void emit( FILE* f, libcasm_ir::MulInstruction* ir ) = 0;
