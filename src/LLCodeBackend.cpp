@@ -77,7 +77,7 @@ const char* LLCodeBackend::getRegister( Value* value, u1 let_flag )
 	{
 		if( derived_mode and Value::isa< Identifier >( value ) )
 		{
-			return "derived_mode_ident"; // PPA: TODO: FIXME: CONT'D HERE!!!
+			return value->getName(); // PPA: TODO: FIXME: CONT'D HERE!!!
 		}
 		else
 		{
@@ -134,7 +134,14 @@ const char* getType( Type* t )
 	}
 	else if( t->getIDKind() == Type::ID::BIT )
 	{
-		return std::string( "Bit" + std::to_string( t->getBitsize() ) ).c_str();
+		static std::unordered_map< u16, std::string > cache;
+		auto result = cache.find( t->getBitsize() );
+		if( result != cache.end() )
+		{
+			return result->second.c_str();
+		}
+		cache[ t->getBitsize() ] = std::string( "Bit" + std::to_string( t->getBitsize() ) );		
+	    return cache[ t->getBitsize() ].c_str();
 	}
 	else
 	{
@@ -563,11 +570,11 @@ void LLCodeBackend::emit( FILE* f, Derived* ir )
 	
 	fprintf
 	( f
-	, "define linkonce_odr %%libcasm-rt.%s @%s( " 
-	, getType( ir )
+	, "define linkonce_odr void @%s( %%libcasm-rt.%s* %%.rd " 
 	, ir->getName()
+	, getType( ir )
 	);
-
+	
 	
 	//" ) #0\n"
 	// PPA: FIXME: CONT'D HERE!!!!
@@ -579,11 +586,16 @@ void LLCodeBackend::emit( FILE* f, Derived* ir )
 	
 	fprintf
 	( f
-	, "%sret %%libcasm-rt.%s %%r0\n"
+	, "%scall void %%libcasm-rt.mov.%s.%s( %%libcasm-rt.%s* %%.rd, %%libcasm-rt.%s* %%.r%lu )\n"
 	, INDENT
 	, getType( ir )
-	);
+	, getType( ir )
+	, getType( ir )
+	, getType( ir )
+	, (register_count - 1)
+    );
 	
+	fprintf( f, "%sret void\n", INDENT );
 	fprintf( f, "}\n" );
 	fprintf( f, "\n" );
 }
@@ -896,42 +908,17 @@ void LLCodeBackend::emit( FILE* f, CallInstruction* ir )
 	std::stringstream indent;
 	getIndent( indent, ir ); 
 	
-	const char* call_reg = 0;
+	const char* call_prefix = 0;
 	
 	Value* symbol = ir->getValue(0);
 	
-	if( Value::isa< Builtin >( symbol ) 
-	or  Value::isa< Derived >( symbol )
-	)
+	if( Value::isa< Builtin >( symbol ) )
 	{
-		call_reg = std::string( "%%libcasm-rt." + std::string(  ) ).c_str();
-
-		fprintf
-		( f
-		, "%s%s = call %%libcasm-rt.%s %%libcasm-rt.%s( "
-		, indent.str().c_str()
-		, getRegister( ir )
-		, getType( ir )
-		, symbol->getName()
-		);
-		
-		i32 cnt = 0;
-		for( auto value : ir->getValues() )
-		{
-			cnt++;
-			if( cnt == 1 )
-			{
-				continue;
-			}
-			if( cnt != 2 )
-			{
-				fprintf( f, ", " );
-			}
-			
-			fprintf( f, "%%libcasm-rt.%s* %s", getType( value ), getRegister( value ) );
-		}
-	    
-		fprintf( f, " )\n" );
+		call_prefix = "libcasm-rt.";
+	}
+	else if(  Value::isa< Derived >( symbol ) )
+	{
+		call_prefix = "";
 	}
 	else
 	{
@@ -939,6 +926,34 @@ void LLCodeBackend::emit( FILE* f, CallInstruction* ir )
 		symbol->dump();
 		assert( !" unimplemented call symbol " );
 	}
+	
+	fprintf
+	( f
+	, "%s%s = call @%s%s %%libcasm-rt.%s( "
+	, indent.str().c_str()
+	, getRegister( ir )
+	, call_prefix
+	, getType( ir )
+	, symbol->getName()
+	);
+		
+	i32 cnt = 0;
+	for( auto value : ir->getValues() )
+	{
+		cnt++;
+		if( cnt == 1 )
+		{
+				continue;
+		}
+		if( cnt != 2 )
+		{
+			fprintf( f, ", " );
+		}
+		
+		fprintf( f, "%%libcasm-rt.%s* %s", getType( value ), getRegister( value ) );
+	}
+	
+	fprintf( f, " )\n" );
 }
 
 void LLCodeBackend::emit( FILE* f, PrintInstruction* ir )
