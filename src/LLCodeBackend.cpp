@@ -75,9 +75,9 @@ const char* LLCodeBackend::getRegister( Value* value, u1 let_flag )
 	}
 	else
 	{
-		if( derived_mode and Value::isa< Identifier >( value ) )
+		if( Value::isa< Identifier >( value ) )
 		{
-			return value->getName(); // PPA: TODO: FIXME: CONT'D HERE!!!
+			return value->getName();
 		}
 		else
 		{
@@ -562,8 +562,6 @@ void LLCodeBackend::emit( FILE* f, Function* ir )
 
 void LLCodeBackend::emit( FILE* f, Derived* ir )
 {
-    fprintf( stderr, "+++ FIXME +++: %s:%i: derived with no arguments generation!!!\n", __FILE__, __LINE__ );
-
 	derived_mode = true;
     register_count = 0;	
 	label_count = 0;
@@ -575,10 +573,12 @@ void LLCodeBackend::emit( FILE* f, Derived* ir )
 	, getType( ir )
 	);
 	
+	for( auto param : ir->getParameters() )
+	{
+		fprintf( f, ", %%libcasm-rt.%s* %s", getType( param->getType() ), param->getName() );
+	}
 	
-	//" ) #0\n"
-	// PPA: FIXME: CONT'D HERE!!!!
-	
+	fprintf( f, " ) #0\n" );
 	fprintf( f, "{\n" );
 	fprintf( f, "begin:\n");
 	
