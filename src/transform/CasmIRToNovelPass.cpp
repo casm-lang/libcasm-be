@@ -61,9 +61,9 @@ bool CasmIRToNovelPass::run( libpass::PassResult& pr )
 	( libcasm_ir::Traversal::PREORDER
 	, this
 	);
-
-
+	
 	pr.setResult< CasmIRToNovelPass >( module );
+	pr.setResult< libnovel::NovelDumpPass >( module );
 	
 	return false;
 }
@@ -75,35 +75,101 @@ libnovel::Module* CasmIRToNovelPass::getModule( void ) const
 }
 
 
-#define DUMP_PREFIX  printf( "%-14s: %p, %s ", __FUNCTION__, &value, value.getName() )
-#define DUMP_POSTFIX printf( "\n" );
+#define DUMP_PREFIX  printf( "%-14s: %p, %s", __FUNCTION__, &value, value.getName() )
+#define DUMP_POSTFIX printf( " [TODO]\n" );
+
 
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::Specification& value )
 {
-	DUMP_PREFIX; DUMP_POSTFIX;
+    module = new libnovel::Module( value.getName() );
+	
+	// ADD RUNTIME !!!
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 {
-	DUMP_PREFIX; DUMP_POSTFIX;
 }
+
 
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::Agent& value )
 {
-	DUMP_PREFIX; DUMP_POSTFIX;
+	// PPA: agent generation currently not implemented due to single agent execution behavior!
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::Agent& value )
 {
-	DUMP_PREFIX; DUMP_POSTFIX;
+}
+
+
+libnovel::Structure* CasmIRToNovelPass::factory( libcasm_ir::Type* type )
+{
+	static std::unordered_map< u64, libnovel::Structure* > cache;
+	
+	assert( type );
+	assert( type->getParameters().size() == 0 );
+	assert( type->getSubTypes().size() == 0 );
+
+	libnovel::Structure* structure = 0;
+	
+	u64 tid = type->getID();
+	
+	if( tid == libcasm_ir::IntegerType.getID() )
+	{
+		auto result = cache.find( tid );
+		if( result != cache.end() )
+		{
+			return result->second;
+		}
+
+		structure = new libnovel::Structure( "Integer" );
+		assert( structure );
+
+		structure->add( new libnovel::Structure( "value", &libnovel::TypeB64 ) );
+		structure->add( new libnovel::Structure( "isdef", &libnovel::TypeB1  ) );
+		
+		cache[ tid ] = structure;
+	    module->add( structure );
+	}
+	else
+	{
+		assert( !"only Integer type is currently supported!" );
+	}
+
+	return structure;
 }
 
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::Function& value )
 {
-	DUMP_PREFIX; DUMP_POSTFIX;
+	libnovel::Memory* mem = new libnovel::Memory( factory( value.getType() ), 1 );
+	
+	libnovel::Function* func = new libnovel::Function( value.getName() );
+	assert( func );
+	module->add( func );
+	
+	libnovel::Reference* loc = new libnovel::Reference
+   	( "location"
+	, &libnovel::TypeB32 // TODO: FIXME: this type has to be maybe changed in the future!!! 
+	, func
+	, false
+	);
+    assert( loc );
+
+	libnovel::SequentialScope* scope = new libnovel::SequentialScope();
+	assert( scope );
+	func->setContext( scope );
+	
+	const std::vector< libcasm_ir::Type* >& params = value.getType()->getParameters();
+	if( params.size() != 0 )
+	{
+		assert( !" unimplemented transformation for n-ary functions!" );
+	}
+
+	
+	
+	printf( "%s:%i: '%s'\n", __FILE__, __LINE__, value.getType()->getName() );	
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::Function& value )
 {
-	DUMP_PREFIX; DUMP_POSTFIX;
 }
+
 
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::Rule& value )
 {

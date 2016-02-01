@@ -64,6 +64,7 @@ INCLUDE += -I ../casm-ir/src
 INCLUDE += -I ../casm-ir/src/analyze
 INCLUDE += -I ../casm-ir/src/transform
 INCLUDE += -I ../novel/src
+INCLUDE += -I ../novel/src/analyze
 
 default: obj $(TARGET)
 

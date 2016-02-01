@@ -42,6 +42,7 @@
 #include "libnovel.h"
 
 #include "CasmIRDumpPass.h"
+#include "NovelDumpPass.h"
 
 /**
    @brief    TODO
@@ -63,8 +64,10 @@ namespace libcasm_be
 
 		libnovel::Module* getModule( void ) const;
 
-		
 		LIB_CASMIR_VISITOR_INTERFACE;
+
+	private:
+		libnovel::Structure* factory( libcasm_ir::Type* type );
 	};
 }
 
