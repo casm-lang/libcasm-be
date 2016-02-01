@@ -51,12 +51,19 @@ CPPOBJECTS += obj/Backend.o
 CPPOBJECTS += obj/LLCodeBackend.o
 CPPOBJECTS += obj/CasmIRToLLCodePass.o
 
+CPPOBJECTS += obj/CasmIRToNovelPass.o
+
 INCLUDE += -I ./src
 INCLUDE += -I ./src/analyze
 INCLUDE += -I ./src/transform
 INCLUDE += -I ../
 INCLUDE += -I ../pass/src
+INCLUDE += -I ../casm-fe/src
+INCLUDE += -I ../casm-fe/build/src
 INCLUDE += -I ../casm-ir/src
+INCLUDE += -I ../casm-ir/src/analyze
+INCLUDE += -I ../casm-ir/src/transform
+INCLUDE += -I ../novel/src
 
 default: obj $(TARGET)
 
