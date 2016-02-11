@@ -57,6 +57,8 @@ namespace libcasm_be
 	private:
 		libnovel::Module* module;
 		
+		std::unordered_map< libcasm_ir::Value*, libnovel::Value* > reference;
+		
 	public:
 		static char id;
 			

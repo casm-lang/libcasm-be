@@ -139,8 +139,11 @@ libnovel::Structure* CasmIRToNovelPass::factory( libcasm_ir::Type* type )
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::Function& value )
 {
 	libnovel::Memory* mem = new libnovel::Memory( factory( value.getType() ), 1 );
+
+	string* name = new string( "location_" + string( value.getName() ));
 	
-	libnovel::Function* func = new libnovel::Function( value.getName() );
+	
+	libnovel::Function* func = new libnovel::Function( name->c_str() );
 	assert( func );
 	module->add( func );
 	
@@ -151,7 +154,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::Function& value )
 	, false
 	);
     assert( loc );
-
+	
 	libnovel::SequentialScope* scope = new libnovel::SequentialScope();
 	assert( scope );
 	func->setContext( scope );
@@ -164,34 +167,59 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::Function& value )
 
 	
 	
-	printf( "%s:%i: '%s'\n", __FILE__, __LINE__, value.getType()->getName() );	
+	printf( "%s:%i: '%s'\n", __FILE__, __LINE__, value.getType()->getName() );
+
+	reference[ &value ] = func;
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::Function& value )
 {
 }
 
 
+
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::Rule& value )
 {
-	DUMP_PREFIX; DUMP_POSTFIX;
+	string* name = new string( "rule_" + string( value.getName() ));
+	
+	
+	libnovel::Component* comp = new libnovel::Component( name->c_str() );
+	assert( comp );
+	module->add( comp );
+
+	reference[ &value ] = comp;
 }
 void CasmIRToNovelPass::visit_interlog( libcasm_ir::Rule& value )
 {
-	DUMP_PREFIX; DUMP_POSTFIX;
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::Rule& value )
 {
-	DUMP_PREFIX; DUMP_POSTFIX;
+	reference[ &value ] = 0;
 }
 
 
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::ParallelBlock& value )
 {
-	DUMP_PREFIX; DUMP_POSTFIX;
+	libnovel::ParallelScope* scope = new libnovel::ParallelScope();
+	assert( scope );
+
+    libcasm_ir::ExecutionSemanticsBlock* parent = value.getParent();
+	if( !parent )
+	{
+		libcasm_ir::Rule* rule = value.getBound();
+		
+		libnovel::Component* comp = (libnovel::Component*)(reference[rule]);
+		comp->setContext( scope );
+	}
+	else
+	{
+		assert(0);
+	}
+	
+	reference[ &value ] = scope;
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::ParallelBlock& value )
 {
-	DUMP_PREFIX; DUMP_POSTFIX;
+	reference[ &value ] = 0;
 }
 
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::SequentialBlock& value )
@@ -205,31 +233,86 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::SequentialBlock& value )
 
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::TrivialStatement& value )
 {
-	DUMP_PREFIX; DUMP_POSTFIX;
+	libcasm_ir::ExecutionSemanticsBlock* parent = value.getScope();
+	assert( parent );
+	
+	libnovel::TrivialStatement* stmt = new libnovel::TrivialStatement( reference[ parent ] );
+	assert( stmt );
+	
+    reference[ &value ] = stmt;
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::TrivialStatement& value )
-{
-	DUMP_PREFIX; DUMP_POSTFIX;
+{	
+    reference[ &value ] = 0;
 }
 
 		
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::LocationInstruction& value )
 {
-	DUMP_PREFIX; DUMP_POSTFIX;
+    assert( value.getValues().size() >= 1 );
+	
+	libcasm_ir::Value* src = value.getValue(0);
+	assert( libcasm_ir::Value::isa< libcasm_ir::Function >( src ) );
+	
+	libnovel::Value* location_src = reference[ src ];
+	assert( location_src );
+	
+	libnovel::CallInstruction* call = new libnovel::CallInstruction( location_src );
+	assert( call );
+
+	libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
+	assert( parent );
+	
+	libnovel::Statement* stmt = (libnovel::Statement*)reference[ parent ];
+	assert( stmt );
+	stmt->add( call );
+	
+	reference[ &value ] = call;
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::LocationInstruction& value )
-{
-	DUMP_PREFIX; DUMP_POSTFIX;
+{	
 }
+
 
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::LookupInstruction& value )
 {
-	DUMP_PREFIX; DUMP_POSTFIX;
+	// TODO: FIXME: PPA: this lookup function has to be moved later into the 'run-time' implementation
+	static libnovel::Function* lup = 0;
+	if( !lup )
+	{
+		lup = new libnovel::Function( "lookup" );
+		assert( lup );
+		module->add( lup );
+
+		libnovel::Reference* loc = new libnovel::Reference
+		( "location"
+		, &libnovel::TypeB32 // TODO: FIXME: this type has to be maybe changed in the future!!! 
+		, lup
+		, false
+		);
+		assert( loc );
+		
+		libnovel::SequentialScope* scope = new libnovel::SequentialScope();
+		assert( scope );
+		lup->setContext( scope );
+	}
+    
+	assert( value.getValues().size() == 1 );
+	
+	libcasm_ir::Value* src = value.get();
+	assert( libcasm_ir::Value::isa< libcasm_ir::LocationInstruction >( src ) );
+	
+	libnovel::Value* lookup_src = reference[ src ];
+	assert( lookup_src );
+	
+	libnovel::CallInstruction* call = new libnovel::CallInstruction( lup );
+	assert( call );
+	call->add( lookup_src );
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::LookupInstruction& value )
 {
-	DUMP_PREFIX; DUMP_POSTFIX;
 }
+
 
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::UpdateInstruction& value )
 {
