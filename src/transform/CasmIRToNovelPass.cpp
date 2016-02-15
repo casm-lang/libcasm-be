@@ -98,6 +98,7 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Agent& value )
 {
 }
 
+static libnovel::Structure* CasmRT_Integer = 0;
 
 libnovel::Structure* CasmIRToNovelPass::factory( libcasm_ir::Type* type )
 {
@@ -121,7 +122,9 @@ libnovel::Structure* CasmIRToNovelPass::factory( libcasm_ir::Type* type )
 
 		structure = new libnovel::Structure( "Integer" );
 		assert( structure );
-
+		CasmRT_Integer = structure;
+		CasmRT_Integer->getType()->bind( CasmRT_Integer );
+		
 		structure->add( new libnovel::Structure( "value", &libnovel::TypeB64 ) );
 		structure->add( new libnovel::Structure( "isdef", &libnovel::TypeB1  ) );
 		
@@ -288,7 +291,6 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::LookupInstruction& value )
 		( "location"
 		, &libnovel::TypeB32 // TODO: FIXME: this type has to be maybe changed in the future!!! 
 		, lup
-		, false
 		);
 		assert( loc );
 		
@@ -308,6 +310,8 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::LookupInstruction& value )
 	libnovel::CallInstruction* call = new libnovel::CallInstruction( lup );
 	assert( call );
 	call->add( lookup_src );
+
+	reference[ &value ] = call;
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::LookupInstruction& value )
 {
@@ -325,21 +329,115 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::UpdateInstruction& value )
 
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::AddInstruction& value )
 {
-	DUMP_PREFIX; DUMP_POSTFIX;
+	// TODO: FIXME: PPA: this add function has to be moved later into the 'run-time' implementation
+	static libnovel::Function* add = 0;
+	if( !add )
+	{
+		add = new libnovel::Function( "add" );
+		assert( add );
+		module->add( add );
+		
+		libnovel::Reference* ra = new libnovel::Reference
+		( "ra"
+		, CasmRT_Integer->getType() // TODO: FIXME: this type has to be maybe changed in the future!!! 
+		, add
+		);
+		assert( ra );
+	    
+		libnovel::Reference* rb = new libnovel::Reference
+		( "rb"
+		, &libnovel::TypeStructure // TODO: FIXME: this type has to be maybe changed in the future!!! 
+		, add
+		);
+		assert( rb );
+
+		libnovel::Reference* rt = new libnovel::Reference
+		( "rt"
+		, &libnovel::TypeStructure // TODO: FIXME: this type has to be maybe changed in the future!!! 
+		, add
+		, false
+		);
+		assert( rt );
+		
+		libnovel::SequentialScope* scope = new libnovel::SequentialScope();
+		assert( scope );
+		add->setContext( scope );
+	}
+
+	libnovel::CallInstruction* call = new libnovel::CallInstruction( add );
+	assert( call );
+	
+	libnovel::Value* lhs = reference[ value.getLHS() ];
+	assert( lhs );
+    call->add( lhs );
+	
+	libnovel::Value* rhs = reference[ value.getRHS() ];
+	assert( rhs );
+    call->add( rhs );
+	
+	reference[ &value ] = call;
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::AddInstruction& value )
 {
-	DUMP_PREFIX; DUMP_POSTFIX;
+	
 }
+
 
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::DivInstruction& value )
 {
-	DUMP_PREFIX; DUMP_POSTFIX;
+	// TODO: FIXME: PPA: this div function has to be moved later into the 'run-time' implementation
+	static libnovel::Function* div = 0;
+	if( !div )
+	{
+		div = new libnovel::Function( "div" );
+		assert( div );
+		module->add( div );
+		
+		libnovel::Reference* ra = new libnovel::Reference
+		( "ra"
+		, &libnovel::TypeStructure // TODO: FIXME: this type has to be maybe changed in the future!!! 
+		, div
+		);
+		assert( ra );
+
+		libnovel::Reference* rb = new libnovel::Reference
+		( "rb"
+		, &libnovel::TypeStructure // TODO: FIXME: this type has to be maybe changed in the future!!! 
+		, div
+		);
+		assert( rb );
+
+		libnovel::Reference* rt = new libnovel::Reference
+		( "rt"
+		, &libnovel::TypeStructure // TODO: FIXME: this type has to be maybe changed in the future!!! 
+		, div
+		, false
+		);
+		assert( rt );
+		
+		libnovel::SequentialScope* scope = new libnovel::SequentialScope();
+		assert( scope );
+		div->setContext( scope );
+	}
+	
+	libnovel::CallInstruction* call = new libnovel::CallInstruction( div );
+	assert( call );
+	
+	libnovel::Value* lhs = reference[ value.getLHS() ];
+	assert( lhs );
+    call->add( lhs );
+	
+	libnovel::Value* rhs = reference[ value.getRHS() ];
+	assert( rhs );
+    call->add( rhs );
+	
+	reference[ &value ] = call;
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::DivInstruction& value )
 {
 	DUMP_PREFIX; DUMP_POSTFIX;
 }
+
 
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::AndInstruction& value )
 {
@@ -348,6 +446,26 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::AndInstruction& value )
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::AndInstruction& value )
 {
 	DUMP_PREFIX; DUMP_POSTFIX;
+}
+
+
+// CONSTANTS
+
+void CasmIRToNovelPass::visit_prolog( libcasm_ir::IntegerConstant& value )
+{
+	libnovel::Value* val = libnovel::BitConstant::create( value.getValue(),  CasmRT_Integer->get(0)->getType()->getBitsize() );
+	libnovel::Value* def = libnovel::BitConstant::create( value.isDefined(), CasmRT_Integer->get(1)->getType()->getBitsize() );
+	assert( val );
+	assert( def );
+
+	libnovel::Value* const_int = libnovel::StructureConstant::create( CasmRT_Integer, { val, def } );
+	
+	module->add( const_int );
+	reference[ &value ] = const_int;
+}
+void CasmIRToNovelPass::visit_epilog( libcasm_ir::IntegerConstant& value )
+{
+	
 }
 
 
