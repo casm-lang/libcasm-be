@@ -435,7 +435,6 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::DivInstruction& value )
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::DivInstruction& value )
 {
-	DUMP_PREFIX; DUMP_POSTFIX;
 }
 
 
