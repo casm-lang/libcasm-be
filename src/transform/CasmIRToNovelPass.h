@@ -69,7 +69,9 @@ namespace libcasm_be
 		LIB_CASMIR_VISITOR_INTERFACE;
 
 	private:
-		libnovel::Structure* factory( libcasm_ir::Type* type );
+		libnovel::Structure* factory ( libcasm_ir::Type* type );
+		
+		libnovel::Value* constant( libnovel::Type* type );
 	};
 }
 

@@ -1,5 +1,5 @@
 //  
-//  Copyright (c) 2015 Philipp Paulweber
+//  Copyright (c) 2016 Philipp Paulweber
 //  All rights reserved.
 //  
 //  Developed by: Philipp Paulweber
@@ -45,8 +45,6 @@ static libpass::PassRegistration< CasmIRToNovelPass > PASS
 , 0
 , 0
 );
-
-static const char* default_output_name = "stdout";
 
 
 
@@ -139,20 +137,47 @@ libnovel::Structure* CasmIRToNovelPass::factory( libcasm_ir::Type* type )
 	return structure;
 }
 
+libnovel::Value* CasmIRToNovelPass::constant( libnovel::Type* type )
+{
+	assert( type );
+
+	libnovel::Value* c = 0;
+	
+	if( type->getIDKind() == libnovel::Type::STRUCTURE )
+	{
+		libnovel::Value* b = type->getBound();
+		assert( b and libnovel::Value::isa< libnovel::Structure >( b ) );
+		libnovel::Structure* s = (libnovel::Structure*)b;
+		c = libnovel::StructureConstant::create( s );
+	}
+	else
+	{
+		assert( !"unsupported type to create constant found!" );
+	}
+	
+	assert( c );
+	
+	return c;
+}
+
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::Function& value )
 {
-	libnovel::Memory* mem = new libnovel::Memory( factory( value.getType() ), 1 );
-
+	// TODO: FIXME: implement a Memory access if it is not a 0-ary function!
+	// libnovel::Memory* mem = new libnovel::Memory( factory( value.getType() ), 1 );
+	
+	libnovel::Structure* ty = factory( value.getType() );
+	libnovel::Variable* var = new libnovel::Variable( ty->getType(), constant( ty->getType() ) );
+	assert( var );
+	module->add( var );
+	
 	string* name = new string( "location_" + string( value.getName() ));
-	
-	
 	libnovel::Function* func = new libnovel::Function( name->c_str() );
 	assert( func );
 	module->add( func );
 	
 	libnovel::Reference* loc = new libnovel::Reference
    	( "location"
-	, &libnovel::TypeB32 // TODO: FIXME: this type has to be maybe changed in the future!!! 
+	, &libnovel::TypeB64 // ASSUMTION: PPA: addresses stay in the 64-bit range!
 	, func
 	, false
 	);
@@ -162,16 +187,23 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::Function& value )
 	assert( scope );
 	func->setContext( scope );
 	
+	libnovel::TrivialStatement* stmt = new libnovel::TrivialStatement( scope );
+	libnovel::IdInstruction* id = new libnovel::IdInstruction( var );
+	assert( id );
+	libnovel::StoreInstruction* store = new libnovel::StoreInstruction( id, loc );
+	assert( store );
+	stmt->add( store );
+	
 	const std::vector< libcasm_ir::Type* >& params = value.getType()->getParameters();
 	if( params.size() != 0 )
 	{
 		assert( !" unimplemented transformation for n-ary functions!" );
 	}
-
+	
 	
 	
 	printf( "%s:%i: '%s'\n", __FILE__, __LINE__, value.getType()->getName() );
-
+	
 	reference[ &value ] = func;
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::Function& value )
@@ -265,7 +297,6 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::LocationInstruction& value )
 
 	libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
 	assert( parent );
-	
 	libnovel::Statement* stmt = (libnovel::Statement*)reference[ parent ];
 	assert( stmt );
 	stmt->add( call );
@@ -289,7 +320,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::LookupInstruction& value )
 
 		libnovel::Reference* loc = new libnovel::Reference
 		( "location"
-		, &libnovel::TypeB32 // TODO: FIXME: this type has to be maybe changed in the future!!! 
+		, &libnovel::TypeB64 // ASSUMTION: PPA: addresses stay in the 64-bit range!
 		, lup
 		);
 		assert( loc );
@@ -311,6 +342,12 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::LookupInstruction& value )
 	assert( call );
 	call->add( lookup_src );
 
+	libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
+	assert( parent );	
+	libnovel::Statement* stmt = (libnovel::Statement*)reference[ parent ];
+	assert( stmt );
+	stmt->add( call );
+	
 	reference[ &value ] = call;
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::LookupInstruction& value )
@@ -320,11 +357,60 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::LookupInstruction& value )
 
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::UpdateInstruction& value )
 {
-	DUMP_PREFIX; DUMP_POSTFIX;
+	// TODO: FIXME: PPA: this lookup function has to be moved later into the 'run-time' implementation
+	static libnovel::Function* upd = 0;
+	if( !upd )
+	{
+		upd = new libnovel::Function( "update" );
+		assert( upd );
+		module->add( upd );
+
+		libnovel::Reference* loc = new libnovel::Reference
+		( "location"
+		, &libnovel::TypeB64 // ASSUMTION: PPA: addresses stay in the 64-bit range!
+		, upd
+		);
+		assert( loc );
+
+		libnovel::Reference* val = new libnovel::Reference
+		( "value"
+		, &libnovel::TypeB64 // ASSUMTION: PPA: values are numbers only for now! later, dyn ptr. too for SW-emit only!
+		, upd
+		);
+		assert( val );
+		
+		libnovel::SequentialScope* scope = new libnovel::SequentialScope();
+		assert( scope );
+		upd->setContext( scope );
+	}
+	
+	assert( value.getValues().size() == 2 );
+	
+	libcasm_ir::Value* src = value.getValue(0);
+	assert( libcasm_ir::Value::isa< libcasm_ir::LocationInstruction >( src ) );
+	libnovel::Value* update_src = reference[ src ];
+	assert( update_src );
+	
+	libcasm_ir::Value* val = value.getValue(1);
+	assert( libcasm_ir::Value::isa< libcasm_ir::Instruction >( val ) );
+	libnovel::Value* update_val = reference[ src ];
+	assert( update_val );
+	
+	libnovel::CallInstruction* call = new libnovel::CallInstruction( upd );
+	assert( call );
+	call->add( update_src );
+	call->add( update_val );
+	
+	libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
+	assert( parent );	
+	libnovel::Statement* stmt = (libnovel::Statement*)reference[ parent ];
+	assert( stmt );
+	stmt->add( call );
+
+	reference[ &value ] = call;
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::UpdateInstruction& value )
 {
-	DUMP_PREFIX; DUMP_POSTFIX;
 }
 
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::AddInstruction& value )
