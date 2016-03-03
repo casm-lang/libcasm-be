@@ -294,12 +294,12 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::LocationInstruction& value )
 	
 	libnovel::CallInstruction* call = new libnovel::CallInstruction( location_src );
 	assert( call );
-
-	libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
-	assert( parent );
-	libnovel::Statement* stmt = (libnovel::Statement*)reference[ parent ];
-	assert( stmt );
-	stmt->add( call );
+	
+	// libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
+	// assert( parent );
+	// libnovel::Statement* stmt = (libnovel::Statement*)reference[ parent ];
+	// assert( stmt );
+	// stmt->add( call );
 	
 	reference[ &value ] = call;
 }
@@ -341,7 +341,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::LookupInstruction& value )
 	libnovel::CallInstruction* call = new libnovel::CallInstruction( lup );
 	assert( call );
 	call->add( lookup_src );
-
+	
 	libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
 	assert( parent );	
 	libnovel::Statement* stmt = (libnovel::Statement*)reference[ parent ];
@@ -461,6 +461,12 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::AddInstruction& value )
 	assert( rhs );
     call->add( rhs );
 	
+	libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
+	assert( parent );	
+	libnovel::Statement* stmt = (libnovel::Statement*)reference[ parent ];
+	assert( stmt );
+	stmt->add( call );
+	
 	reference[ &value ] = call;
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::AddInstruction& value )
@@ -516,6 +522,12 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::DivInstruction& value )
 	libnovel::Value* rhs = reference[ value.getRHS() ];
 	assert( rhs );
     call->add( rhs );
+
+	libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
+	assert( parent );	
+	libnovel::Statement* stmt = (libnovel::Statement*)reference[ parent ];
+	assert( stmt );
+	stmt->add( call );
 	
 	reference[ &value ] = call;
 }
