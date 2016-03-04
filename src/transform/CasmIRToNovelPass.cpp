@@ -531,6 +531,27 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::DivInstruction& value )
 		libnovel::SequentialScope* scope = new libnovel::SequentialScope();
 		assert( scope );
 		div->setContext( scope );
+		
+		libnovel::ExtractInstruction* rav = new libnovel::ExtractInstruction( ra, ra->getStructure()->get(0) );
+		libnovel::ExtractInstruction* rad = new libnovel::ExtractInstruction( ra, ra->getStructure()->get(1) );
+		libnovel::ExtractInstruction* rbv = new libnovel::ExtractInstruction( rb, rb->getStructure()->get(0) );
+		libnovel::ExtractInstruction* rbd = new libnovel::ExtractInstruction( rb, rb->getStructure()->get(1) );
+
+		libnovel::LoadInstruction* lav  = new libnovel::LoadInstruction( rav );
+		libnovel::LoadInstruction* lad  = new libnovel::LoadInstruction( rad );
+		libnovel::LoadInstruction* lbv  = new libnovel::LoadInstruction( rbv );
+		libnovel::LoadInstruction* lbd  = new libnovel::LoadInstruction( rbd );
+		
+		libnovel::DivSignedInstruction* icv = new libnovel::DivSignedInstruction( lav, lbv );
+		libnovel::AndInstruction* icd = new libnovel::AndInstruction( lad, lbd );
+		
+		libnovel::StoreInstruction* scv = new libnovel::StoreInstruction( icv, rt->getStructure()->get(0) );
+		libnovel::StoreInstruction* scd = new libnovel::StoreInstruction( icd, rt->getStructure()->get(1) );
+		
+		libnovel::TrivialStatement* stmt_v = new libnovel::TrivialStatement( scope );
+		libnovel::TrivialStatement* stmt_d = new libnovel::TrivialStatement( scope );
+		stmt_v->add( scv );
+		stmt_d->add( scd );
 	}
 	
 	libnovel::CallInstruction* call = new libnovel::CallInstruction( div );
