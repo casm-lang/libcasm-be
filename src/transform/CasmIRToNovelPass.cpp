@@ -461,10 +461,13 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::AddInstruction& value )
 		
 		libnovel::AddSignedInstruction* icv = new libnovel::AddSignedInstruction( lav, lbv );
 		libnovel::AndInstruction* icd = new libnovel::AndInstruction( lad, lbd );
-		
-		libnovel::StoreInstruction* scv = new libnovel::StoreInstruction( icv, rt->getStructure()->get(0) );
-		libnovel::StoreInstruction* scd = new libnovel::StoreInstruction( icd, rt->getStructure()->get(1) );
 
+		libnovel::ExtractInstruction* rtv = new libnovel::ExtractInstruction( rt, rt->getStructure()->get(0) );
+		libnovel::ExtractInstruction* rtd = new libnovel::ExtractInstruction( rt, rt->getStructure()->get(1) );
+		
+		libnovel::StoreInstruction* scv = new libnovel::StoreInstruction( icv, rtv );
+		libnovel::StoreInstruction* scd = new libnovel::StoreInstruction( icd, rtd );
+		
 		libnovel::TrivialStatement* stmt_v = new libnovel::TrivialStatement( scope );
 		libnovel::TrivialStatement* stmt_d = new libnovel::TrivialStatement( scope );
 		stmt_v->add( scv );
@@ -544,9 +547,13 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::DivInstruction& value )
 		
 		libnovel::DivSignedInstruction* icv = new libnovel::DivSignedInstruction( lav, lbv );
 		libnovel::AndInstruction* icd = new libnovel::AndInstruction( lad, lbd );
+
 		
-		libnovel::StoreInstruction* scv = new libnovel::StoreInstruction( icv, rt->getStructure()->get(0) );
-		libnovel::StoreInstruction* scd = new libnovel::StoreInstruction( icd, rt->getStructure()->get(1) );
+		libnovel::ExtractInstruction* rtv = new libnovel::ExtractInstruction( rt, rt->getStructure()->get(0) );
+		libnovel::ExtractInstruction* rtd = new libnovel::ExtractInstruction( rt, rt->getStructure()->get(1) );
+		
+		libnovel::StoreInstruction* scv = new libnovel::StoreInstruction( icv, rtv );
+		libnovel::StoreInstruction* scd = new libnovel::StoreInstruction( icd, rtd );
 		
 		libnovel::TrivialStatement* stmt_v = new libnovel::TrivialStatement( scope );
 		libnovel::TrivialStatement* stmt_d = new libnovel::TrivialStatement( scope );
