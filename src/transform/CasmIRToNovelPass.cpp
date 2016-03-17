@@ -156,6 +156,7 @@ libnovel::Value* CasmIRToNovelPass::constant( libnovel::Type* type )
 	}
 	
 	assert( c );
+	module->add( c );
 	
 	return c;
 }
@@ -175,13 +176,6 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::Function& value )
 	assert( func );
 	module->add( func );
 	
-	libnovel::Reference* loc = new libnovel::Reference
-   	( "location"
-	, &libnovel::TypeB64 // ASSUMTION: PPA: addresses stay in the 64-bit range!
-	, func
-	, false
-	);
-    assert( loc );
 	
 	libnovel::SequentialScope* scope = new libnovel::SequentialScope();
 	assert( scope );
@@ -190,6 +184,17 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::Function& value )
 	libnovel::TrivialStatement* stmt = new libnovel::TrivialStatement( scope );
 	libnovel::IdInstruction* id = new libnovel::IdInstruction( var );
 	assert( id );
+
+	
+	// output parameter for intrinsic!
+	libnovel::Reference* loc = new libnovel::Reference
+   	( "location"
+	, id->getType() // ASSUMTION: PPA: addresses stay in the 48-bit range!
+	, func
+	, false
+	);
+    assert( loc ); // PPA: CONTINUE HERE!!!
+	
 	libnovel::StoreInstruction* store = new libnovel::StoreInstruction( id, loc );
 	assert( store );
 	stmt->add( store );
