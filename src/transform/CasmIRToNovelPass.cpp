@@ -300,6 +300,15 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::LocationInstruction& value )
 	libnovel::CallInstruction* call = new libnovel::CallInstruction( location_src );
 	assert( call );
 	
+
+	assert( libnovel::Value::isa< libnovel::Function >( location_src ) );
+	libnovel::Function* location_src_ptr = (libnovel::Function*)location_src;
+	
+	for( auto p : location_src_ptr->getOutParameters() )
+	{
+		call->add( new libnovel::AllocInstruction( p->getType() ) );
+	}
+	
 	// libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
 	// assert( parent );
 	// libnovel::Statement* stmt = (libnovel::Statement*)reference[ parent ];
@@ -325,7 +334,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::LookupInstruction& value )
 
 		libnovel::Reference* loc = new libnovel::Reference
 		( "location"
-		, &libnovel::TypeB64 // ASSUMTION: PPA: addresses stay in the 64-bit range!
+		, &libnovel::TypeId // ASSUMTION: PPA: addresses stay in the 48-bit range!
 		, lup
 		);
 		assert( loc );
@@ -372,7 +381,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::UpdateInstruction& value )
 
 		libnovel::Reference* loc = new libnovel::Reference
 		( "location"
-		, &libnovel::TypeB64 // ASSUMTION: PPA: addresses stay in the 64-bit range!
+		, &libnovel::TypeId // ASSUMTION: PPA: addresses stay in the 48-bit range!
 		, upd
 		);
 		assert( loc );
@@ -608,7 +617,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::IntegerConstant& value )
 	libnovel::Value* def = libnovel::BitConstant::create( value.isDefined(), CasmRT_Integer->get(1)->getType()->getBitsize() );
 	assert( val );
 	assert( def );
-
+	
 	libnovel::Value* const_int = libnovel::StructureConstant::create( CasmRT_Integer, { val, def } );
 	
 	module->add( const_int );
