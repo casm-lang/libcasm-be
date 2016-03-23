@@ -85,6 +85,15 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::Specification& value )
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 {
+	libnovel::Component* comp = new libnovel::Component( libstdhl::Allocator::string( "kernel" ) );
+	assert( comp );
+	module->add( comp );
+	
+	libnovel::SequentialScope* scope = new libnovel::SequentialScope();
+	assert( scope );
+	comp->setContext( scope );
+
+	
 }
 
 
@@ -97,18 +106,19 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Agent& value )
 }
 
 static libnovel::Structure* CasmRT_Integer = 0;
+static libnovel::Structure* CasmRT_RulePtr = 0;
 
 libnovel::Structure* CasmIRToNovelPass::factory( libcasm_ir::Type* type )
 {
 	static std::unordered_map< u64, libnovel::Structure* > cache;
-	
+		
 	assert( type );
-	assert( type->getParameters().size() == 0 );
+	//assert( type->getParameters().size() == 0 );
 	assert( type->getSubTypes().size() == 0 );
 
 	libnovel::Structure* structure = 0;
 	
-	u64 tid = type->getID();
+	u64 tid = type->getResultType()->getID();
 	
 	if( tid == libcasm_ir::IntegerType.getID() )
 	{
@@ -122,9 +132,26 @@ libnovel::Structure* CasmIRToNovelPass::factory( libcasm_ir::Type* type )
 		assert( structure );
 		CasmRT_Integer = structure;
 		CasmRT_Integer->getType()->bind( CasmRT_Integer );
+		new libnovel::Structure( "value", &libnovel::TypeB64, structure );
+		new libnovel::Structure( "isdef", &libnovel::TypeB1,  structure );
 		
-		structure->add( new libnovel::Structure( "value", &libnovel::TypeB64 ) );
-		structure->add( new libnovel::Structure( "isdef", &libnovel::TypeB1  ) );
+		cache[ tid ] = structure;
+	    module->add( structure );
+	}
+	else if( tid == libcasm_ir::RulePointerType.getID() )
+	{
+		auto result = cache.find( tid );
+		if( result != cache.end() )
+		{
+			return result->second;
+		}
+		
+		structure = new libnovel::Structure( "RulePointer" );
+		assert( structure );
+		CasmRT_RulePtr = structure;
+		CasmRT_RulePtr->getType()->bind( CasmRT_RulePtr );
+		new libnovel::Structure( "value", &libnovel::TypeId, structure );
+		new libnovel::Structure( "isdef", &libnovel::TypeB1, structure );
 		
 		cache[ tid ] = structure;
 	    module->add( structure );
@@ -133,7 +160,7 @@ libnovel::Structure* CasmIRToNovelPass::factory( libcasm_ir::Type* type )
 	{
 		assert( !"only Integer type is currently supported!" );
 	}
-
+	
 	return structure;
 }
 
@@ -184,7 +211,6 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::Function& value )
 	libnovel::TrivialStatement* stmt = new libnovel::TrivialStatement( scope );
 	libnovel::IdInstruction* id = new libnovel::IdInstruction( var );
 	assert( id );
-
 	
 	// output parameter for intrinsic!
 	libnovel::Reference* loc = new libnovel::Reference
@@ -193,11 +219,17 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::Function& value )
 	, func
 	, false
 	);
-    assert( loc ); // PPA: CONTINUE HERE!!!
+    assert( loc );
 	
 	libnovel::StoreInstruction* store = new libnovel::StoreInstruction( id, loc );
 	assert( store );
 	stmt->add( store );
+	reference[ &value ] = func;
+	
+	if( strcmp( value.getName(), "program" ) == 0 )
+	{
+		return;
+	}
 	
 	const std::vector< libcasm_ir::Type* >& params = value.getType()->getParameters();
 	if( params.size() != 0 )
@@ -205,11 +237,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::Function& value )
 		assert( !" unimplemented transformation for n-ary functions!" );
 	}
 	
-	
-	
-	printf( "%s:%i: '%s'\n", __FILE__, __LINE__, value.getType()->getName() );
-	
-	reference[ &value ] = func;
+	//printf( "%s:%i: '%s'\n", __FILE__, __LINE__, value.getType()->getName() );	
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::Function& value )
 {
@@ -225,7 +253,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::Rule& value )
 	libnovel::Component* comp = new libnovel::Component( name->c_str() );
 	assert( comp );
 	module->add( comp );
-
+	
 	reference[ &value ] = comp;
 }
 void CasmIRToNovelPass::visit_interlog( libcasm_ir::Rule& value )
@@ -241,7 +269,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::ParallelBlock& value )
 {
 	libnovel::ParallelScope* scope = new libnovel::ParallelScope();
 	assert( scope );
-
+	
     libcasm_ir::ExecutionSemanticsBlock* parent = value.getParent();
 	if( !parent )
 	{
