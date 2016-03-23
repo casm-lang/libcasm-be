@@ -300,25 +300,25 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::LocationInstruction& value )
 	libnovel::CallInstruction* call = new libnovel::CallInstruction( location_src );
 	assert( call );
 	
-
 	assert( libnovel::Value::isa< libnovel::Function >( location_src ) );
 	libnovel::Function* location_src_ptr = (libnovel::Function*)location_src;
+
+	assert( location_src_ptr->getOutParameters().size() == 1 );
 	
-	for( auto p : location_src_ptr->getOutParameters() )
-	{
-		call->add( new libnovel::AllocInstruction( p->getType() ) );
-	}
+	libnovel::AllocInstruction* alloc = new libnovel::AllocInstruction( location_src_ptr->getOutParameters()[0]->getType() );
+	assert( alloc );
+	call->add( alloc );
 	
-	// libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
-	// assert( parent );
-	// libnovel::Statement* stmt = (libnovel::Statement*)reference[ parent ];
-	// assert( stmt );
-	// stmt->add( call );
+	libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
+	assert( parent );	
+	libnovel::Statement* stmt = (libnovel::Statement*)reference[ parent ];
+	assert( stmt );
+	stmt->add( call );
 	
-	reference[ &value ] = call;
+	reference[ &value ] = alloc;
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::LocationInstruction& value )
-{	
+{
 }
 
 
@@ -333,11 +333,19 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::LookupInstruction& value )
 		module->add( lup );
 
 		libnovel::Reference* loc = new libnovel::Reference
-		( "location"
+		( "lookup_loc"
 		, &libnovel::TypeId // ASSUMTION: PPA: addresses stay in the 48-bit range!
 		, lup
 		);
 		assert( loc );
+
+		libnovel::Reference* val = new libnovel::Reference
+		( "lookup_value"
+		, CasmRT_Integer->getType() // ASSUMTION: TODO: FIXME: PPA: Integer for now!
+		, lup
+		, false
+		);
+		assert( val );
 		
 		libnovel::SequentialScope* scope = new libnovel::SequentialScope();
 		assert( scope );
@@ -356,13 +364,17 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::LookupInstruction& value )
 	assert( call );
 	call->add( lookup_src );
 	
+	libnovel::AllocInstruction* alloc = new libnovel::AllocInstruction( CasmRT_Integer->getType() );
+	assert( alloc );
+	call->add( alloc );
+	
 	libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
 	assert( parent );	
 	libnovel::Statement* stmt = (libnovel::Statement*)reference[ parent ];
 	assert( stmt );
 	stmt->add( call );
 	
-	reference[ &value ] = call;
+	reference[ &value ] = alloc;
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::LookupInstruction& value )
 {
@@ -380,15 +392,15 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::UpdateInstruction& value )
 		module->add( upd );
 
 		libnovel::Reference* loc = new libnovel::Reference
-		( "location"
+		( "update_location"
 		, &libnovel::TypeId // ASSUMTION: PPA: addresses stay in the 48-bit range!
 		, upd
 		);
 		assert( loc );
 
 		libnovel::Reference* val = new libnovel::Reference
-		( "value"
-		, &libnovel::TypeB64 // ASSUMTION: PPA: values are numbers only for now! later, dyn ptr. too for SW-emit only!
+		( "update_value"
+		, CasmRT_Integer->getType() // ASSUMTION: PPA: values are numbers only for now! later, dyn ptr. too for SW-emit only!
 		, upd
 		);
 		assert( val );
@@ -407,7 +419,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::UpdateInstruction& value )
 	
 	libcasm_ir::Value* val = value.getValue(1);
 	assert( libcasm_ir::Value::isa< libcasm_ir::Instruction >( val ) );
-	libnovel::Value* update_val = reference[ src ];
+	libnovel::Value* update_val = reference[ val ];
 	assert( update_val );
 	
 	libnovel::CallInstruction* call = new libnovel::CallInstruction( upd );
@@ -420,7 +432,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::UpdateInstruction& value )
 	libnovel::Statement* stmt = (libnovel::Statement*)reference[ parent ];
 	assert( stmt );
 	stmt->add( call );
-
+	
 	reference[ &value ] = call;
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::UpdateInstruction& value )
@@ -446,14 +458,14 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::AddInstruction& value )
 	    
 		libnovel::Reference* rb = new libnovel::Reference
 		( "rb"
-		, &libnovel::TypeStructure // TODO: FIXME: this type has to be maybe changed in the future!!! 
+		, CasmRT_Integer->getType() // TODO: FIXME: this type has to be maybe changed in the future!!! 
 		, add
 		);
 		assert( rb );
 
 		libnovel::Reference* rt = new libnovel::Reference
 		( "rt"
-		, &libnovel::TypeStructure // TODO: FIXME: this type has to be maybe changed in the future!!! 
+		, CasmRT_Integer->getType() // TODO: FIXME: this type has to be maybe changed in the future!!! 
 		, add
 		, false
 		);
@@ -499,13 +511,16 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::AddInstruction& value )
 	assert( rhs );
     call->add( rhs );
 	
+	libnovel::AllocInstruction* result = new libnovel::AllocInstruction( add->getOutParameters()[0]->getType() );
+	assert( result );
+	call->add( result );	
+	reference[ &value ] = result;
+	
 	libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
 	assert( parent );	
 	libnovel::Statement* stmt = (libnovel::Statement*)reference[ parent ];
 	assert( stmt );
-	stmt->add( call );
-	
-	reference[ &value ] = call;
+	stmt->add( call );	
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::AddInstruction& value )
 {
@@ -525,21 +540,21 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::DivInstruction& value )
 		
 		libnovel::Reference* ra = new libnovel::Reference
 		( "ra"
-		, &libnovel::TypeStructure // TODO: FIXME: this type has to be maybe changed in the future!!! 
+		, CasmRT_Integer->getType() // TODO: FIXME: this type has to be maybe changed in the future!!! 
 		, div
 		);
 		assert( ra );
 
 		libnovel::Reference* rb = new libnovel::Reference
 		( "rb"
-		, &libnovel::TypeStructure // TODO: FIXME: this type has to be maybe changed in the future!!! 
+		, CasmRT_Integer->getType() // TODO: FIXME: this type has to be maybe changed in the future!!! 
 		, div
 		);
 		assert( rb );
 
 		libnovel::Reference* rt = new libnovel::Reference
 		( "rt"
-		, &libnovel::TypeStructure // TODO: FIXME: this type has to be maybe changed in the future!!! 
+		, CasmRT_Integer->getType() // TODO: FIXME: this type has to be maybe changed in the future!!! 
 		, div
 		, false
 		);
@@ -585,14 +600,17 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::DivInstruction& value )
 	libnovel::Value* rhs = reference[ value.getRHS() ];
 	assert( rhs );
     call->add( rhs );
-
+	
+	libnovel::AllocInstruction* result = new libnovel::AllocInstruction( div->getOutParameters()[0]->getType() );
+	assert( result );
+	call->add( result );	
+	reference[ &value ] = result;
+	
 	libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
 	assert( parent );	
 	libnovel::Statement* stmt = (libnovel::Statement*)reference[ parent ];
 	assert( stmt );
 	stmt->add( call );
-	
-	reference[ &value ] = call;
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::DivInstruction& value )
 {
