@@ -85,15 +85,15 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::Specification& value )
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 {
-	libnovel::Component* comp = new libnovel::Component( libstdhl::Allocator::string( "kernel" ) );
+	//libnovel::Identifier::forgetSymbol( value.getName() );
+	
+	libnovel::Function* comp = new libnovel::Function( value.getName() ); // libstdhl::Allocator::string( "kernel" ) );
 	assert( comp );
 	module->add( comp );
 	
 	libnovel::SequentialScope* scope = new libnovel::SequentialScope();
 	assert( scope );
 	comp->setContext( scope );
-
-	
 }
 
 
@@ -199,7 +199,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::Function& value )
 	module->add( var );
 	
 	string* name = new string( "location_" + string( value.getName() ));
-	libnovel::Function* func = new libnovel::Function( name->c_str() );
+	libnovel::Intrinsic* func = new libnovel::Intrinsic( name->c_str() );
 	assert( func );
 	module->add( func );
 	
@@ -250,7 +250,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::Rule& value )
 	string* name = new string( "rule_" + string( value.getName() ));
 	
 	
-	libnovel::Component* comp = new libnovel::Component( name->c_str() );
+	libnovel::Function* comp = new libnovel::Function( name->c_str() );
 	assert( comp );
 	module->add( comp );
 	
@@ -275,7 +275,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::ParallelBlock& value )
 	{
 		libcasm_ir::Rule* rule = value.getBound();
 		
-		libnovel::Component* comp = (libnovel::Component*)(reference[rule]);
+		libnovel::Function* comp = (libnovel::Function*)(reference[rule]);
 		comp->setContext( scope );
 	}
 	else
@@ -328,8 +328,8 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::LocationInstruction& value )
 	libnovel::CallInstruction* call = new libnovel::CallInstruction( location_src );
 	assert( call );
 	
-	assert( libnovel::Value::isa< libnovel::Function >( location_src ) );
-	libnovel::Function* location_src_ptr = (libnovel::Function*)location_src;
+	assert( libnovel::Value::isa< libnovel::Intrinsic >( location_src ) );
+	libnovel::Intrinsic* location_src_ptr = (libnovel::Intrinsic*)location_src;
 
 	assert( location_src_ptr->getOutParameters().size() == 1 );
 	
@@ -353,10 +353,10 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::LocationInstruction& value )
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::LookupInstruction& value )
 {
 	// TODO: FIXME: PPA: this lookup function has to be moved later into the 'run-time' implementation
-	static libnovel::Function* lup = 0;
+	static libnovel::Intrinsic* lup = 0;
 	if( !lup )
 	{
-		lup = new libnovel::Function( "lookup" );
+		lup = new libnovel::Intrinsic( "lookup" );
 		assert( lup );
 		module->add( lup );
 
@@ -412,10 +412,10 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::LookupInstruction& value )
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::UpdateInstruction& value )
 {
 	// TODO: FIXME: PPA: this lookup function has to be moved later into the 'run-time' implementation
-	static libnovel::Function* upd = 0;
+	static libnovel::Intrinsic* upd = 0;
 	if( !upd )
 	{
-		upd = new libnovel::Function( "update" );
+		upd = new libnovel::Intrinsic( "update" );
 		assert( upd );
 		module->add( upd );
 
@@ -470,10 +470,10 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::UpdateInstruction& value )
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::AddInstruction& value )
 {
 	// TODO: FIXME: PPA: this add function has to be moved later into the 'run-time' implementation
-	static libnovel::Function* add = 0;
+	static libnovel::Intrinsic* add = 0;
 	if( !add )
 	{
-		add = new libnovel::Function( "add" );
+		add = new libnovel::Intrinsic( "add" );
 		assert( add );
 		module->add( add );
 		
@@ -559,10 +559,10 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::AddInstruction& value )
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::DivInstruction& value )
 {
 	// TODO: FIXME: PPA: this div function has to be moved later into the 'run-time' implementation
-	static libnovel::Function* div = 0;
+	static libnovel::Intrinsic* div = 0;
 	if( !div )
 	{
-		div = new libnovel::Function( "div" );
+		div = new libnovel::Intrinsic( "div" );
 		assert( div );
 		module->add( div );
 		
