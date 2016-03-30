@@ -92,8 +92,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::Specification& value )
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 {
-	// CASM RT KERNEL
-	assert( CasmRT_Program );
+    // CASM RT KERNEL
 	
 	libnovel::Function* kernel = new libnovel::Function( value.getName() );
 	assert( kernel );
@@ -103,26 +102,63 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 	assert( scope );
 	kernel->setContext( scope );
 	
-
-	libnovel::Reference* p = new libnovel::Reference
-	( "program"
-	, CasmRT_Program->getType()
-	, kernel
-	, libnovel::Reference::LINKAGE
-	);
-	assert( p );
+	assert( CasmRT_Program );
+	libnovel::Reference* program = 0;
 	
-	libnovel::ExtractInstruction* pv = new libnovel::ExtractInstruction( p, p->getStructure()->get(0) );
-	libnovel::ExtractInstruction* pd = new libnovel::ExtractInstruction( p, p->getStructure()->get(1) );
+	if( module->has< libnovel::Variable >() )
+	{
+		for( auto var : module->get< libnovel::Variable >() )
+		{
+			libnovel::Reference* ref = new libnovel::Reference
+			( ( var == CasmRT_Program ? "program" : var->getLabel() )
+			, var->getType()
+			, kernel
+			, libnovel::Reference::LINKAGE
+			);
+			assert( ref );
+			ref->setRef< libnovel::Variable >( var );
+			
+			if( var == CasmRT_Program )
+			{
+				assert( !program && " only one program variable is allowed! " );
+				program = ref;
+			}
+		}
+	}
 	
-	libnovel::LoadInstruction* lpv  = new libnovel::LoadInstruction( pv );
-	libnovel::LoadInstruction* lpd  = new libnovel::LoadInstruction( pd );
+	// this section needs to be covered directly in a separate "Linkage" or "VariableUsage" class
+	// libnovel::Reference* p = new libnovel::Reference
+	// ( "program"
+	// , CasmRT_Program->getType()
+	// , kernel
+	// , libnovel::Reference::LINKAGE
+	// );	
+	assert( program );
+	// p->setRef< libnovel::Variable >( CasmRT_Program ); // TODO: FIXME: PPA: currently ok, but needs to be improved in later version
 	
-
-	libnovel::TrivialStatement* stmt = new libnovel::TrivialStatement( scope );
-	stmt->add( lpv );
-	stmt->add( lpd );
-
+	
+	libnovel::Value* pv = new libnovel::ExtractInstruction( program, program->getStructure()->get(0) );
+	libnovel::Value* pd = new libnovel::ExtractInstruction( program, program->getStructure()->get(1) );
+	
+	libnovel::Value* lpv  = new libnovel::LoadInstruction( pv );
+	libnovel::Value* lpd  = new libnovel::LoadInstruction( pd );
+	
+	
+	libnovel::Value* check = new libnovel::EquUnsignedInstruction
+	( lpd, libnovel::BitConstant::create( 0, pd->getType()->getBitsize() ) );
+	
+	libnovel::TrivialStatement* prolog = new libnovel::TrivialStatement( scope );
+	prolog->add( new libnovel::NopInstruction() );
+	
+	libnovel::LoopStatement* br = new libnovel::LoopStatement( scope );
+    br->add( check );
+	
+	libnovel::TrivialStatement* execute = new libnovel::TrivialStatement( br );
+    execute->add( lpv );
+    
+	libnovel::TrivialStatement* epilog = new libnovel::TrivialStatement( scope );
+    epilog->add( new libnovel::NopInstruction() );
+    
 	// CONTINUE HERE!!!
 }
 
