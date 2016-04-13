@@ -131,22 +131,33 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 	libnovel::Value* lpd  = new libnovel::LoadInstruction( pd );
 	
 	
-	libnovel::Value* check = new libnovel::EquUnsignedInstruction
-	( lpd, libnovel::BitConstant::create( 0, pd->getType()->getBitsize() ) );
+	libnovel::BitConstant* c = libnovel::BitConstant::create( 0, pd->getType()->getBitsize() );
+	assert( c );
+	module->add( c );
+	
+	libnovel::Value* check = new libnovel::NeqUnsignedInstruction( lpd, c );
 	
 	libnovel::TrivialStatement* prolog = new libnovel::TrivialStatement( scope );
 	prolog->add( new libnovel::NopInstruction() );
 	
-	libnovel::LoopStatement* br = new libnovel::LoopStatement( scope );
-    br->add( check );
+	libnovel::LoopStatement* loop = new libnovel::LoopStatement( scope );
+    loop->add( check );
 	
-	libnovel::TrivialStatement* execute = new libnovel::TrivialStatement( br );
+	libnovel::SequentialScope* loop_true = new libnovel::SequentialScope();	
+	loop->addScope( loop_true );
+	
+	libnovel::TrivialStatement* execute = new libnovel::TrivialStatement( loop_true );
     execute->add( lpv );
     
 	libnovel::TrivialStatement* epilog = new libnovel::TrivialStatement( scope );
     epilog->add( new libnovel::NopInstruction() );
     
 	// CONTINUE HERE!!!
+
+	libnovel::BranchStatement* br = new libnovel::BranchStatement( scope );
+    br->add( new libnovel::NeqUnsignedInstruction( c, c ) );
+	br->addScope( new libnovel::SequentialScope() );
+	br->addScope( new libnovel::ParallelScope() );
 }
 
 
