@@ -98,8 +98,10 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 	{
 		for( auto var : module->get< libnovel::Variable >() )
 		{
+			assert( libnovel::Value::isa< libnovel::Variable >( var ) ); 
+			
 			libnovel::Reference* ref = new libnovel::Reference
-			( ( var == CasmRT_Program ? "program" : var->getLabel() )
+			( ((libnovel::Variable*)var)->getIdent()
 			, var->getType()
 			, kernel
 			, libnovel::Reference::LINKAGE
@@ -160,6 +162,19 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
     br->add( new libnovel::NeqUnsignedInstruction( c, c ) );
 	br->addScope( new libnovel::SequentialScope() );
 	br->addScope( new libnovel::ParallelScope() );
+
+
+	libnovel::Function* func = new libnovel::Function( "main" );
+	assert( func );
+	module->add( func );
+	
+    scope = new libnovel::SequentialScope();
+	assert( scope );
+	func->setContext( scope );
+
+	libnovel::TrivialStatement* stmt = new libnovel::TrivialStatement( scope );
+    stmt->add( new libnovel::CallInstruction( kernel ) );
+	
 }
 
 
@@ -259,7 +274,8 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::Function& value )
 	// libnovel::Memory* mem = new libnovel::Memory( factory( value.getType() ), 1 );
 	
 	libnovel::Structure* ty = factory( value.getType() );
-	libnovel::Variable* var = new libnovel::Variable( ty->getType(), constant( ty->getType() ) );
+	libnovel::Variable* var =
+		new libnovel::Variable( ty->getType(), constant( ty->getType() ), libstdhl::Allocator::string( value.getName() ) );
 	assert( var );
 	module->add( var );
 	
