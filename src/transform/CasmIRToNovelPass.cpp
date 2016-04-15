@@ -57,6 +57,7 @@ bool CasmIRToNovelPass::run( libpass::PassResult& pr )
 
 
 
+
 static libnovel::Structure* CasmRT_Integer = 0;
 static libnovel::Structure* CasmRT_RulePtr = 0;
 static libnovel::Variable*  CasmRT_Program = 0;
@@ -128,34 +129,51 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 	assert( program );
 	// p->setRef< libnovel::Variable >( CasmRT_Program ); // TODO: FIXME: PPA: currently ok, but needs to be improved in later version
 	
-	
-	libnovel::Value* pv = new libnovel::ExtractInstruction( program, program->getStructure()->get(0) );
-	libnovel::Value* pd = new libnovel::ExtractInstruction( program, program->getStructure()->get(1) );
-	
-	libnovel::Value* lpv  = new libnovel::LoadInstruction( pv );
-	libnovel::Value* lpd  = new libnovel::LoadInstruction( pd );
-	
-	
-	libnovel::BitConstant* c = libnovel::BitConstant::create( 0, pd->getType()->getBitsize() );
-	assert( c );
-	module->add( c );
-	
-	libnovel::Value* check = new libnovel::NeqUnsignedInstruction( lpd, c );
+	assert( value.has< libcasm_ir::Agent >() );
+	assert( value.get< libcasm_ir::Agent >().size() == 1 );
+	libcasm_ir::Value* agent_ptr = value.get< libcasm_ir::Agent >()[0];
+	assert( libcasm_ir::Value::isa< libcasm_ir::Agent >( agent_ptr ) );
+	libcasm_ir::Agent* agent = (libcasm_ir::Agent*)agent_ptr;
+	libcasm_ir::Rule* init_rule = agent->getInitRulePointer()->getValue();
+	libnovel::Value* init_rule_func_val = reference[ init_rule ];
+	assert( init_rule_func_val );
+	assert( libnovel::Value::isa< libnovel::Function >( init_rule_func_val ) );
+	libnovel::Function* init_rule_func = (libnovel::Function*)init_rule_func_val;
+
 	
 	libnovel::TrivialStatement* prolog = new libnovel::TrivialStatement( scope );
-	prolog->add( new libnovel::NopInstruction() );
+	libnovel::Value* pv  = new libnovel::ExtractInstruction( program, program->getStructure()->get(0) );
+	//libnovel::IdInstruction* id = new libnovel::IdInstruction( init_rule_func );
+	//assert( id );
+	libnovel::Value* lpv = 0;// new libnovel::StoreInstruction( id, pv );
+	// PPA: CONTINUE HERE !!!
+	
+	libnovel::Value* pd  = new libnovel::ExtractInstruction( program, program->getStructure()->get(1) );
+    libnovel::BitConstant* c = libnovel::BitConstant::create( 1, pd->getType()->getBitsize() );
+	assert( c );
+	module->add( c );
+    libnovel::Value* lpd = new libnovel::StoreInstruction( c, pd );	
+	prolog->add( lpd );
 	
 	libnovel::LoopStatement* loop = new libnovel::LoopStatement( scope );
-    loop->add( check );
+    pd  = new libnovel::ExtractInstruction( program, program->getStructure()->get(1) );
+    lpd = new libnovel::LoadInstruction( pd );
+    c   = libnovel::BitConstant::create( 0, pd->getType()->getBitsize() );
+	assert( c );
+	module->add( c );
+	libnovel::Value* check = new libnovel::NeqUnsignedInstruction( lpd, c );
+	loop->add( check );
 	
 	libnovel::SequentialScope* loop_true = new libnovel::SequentialScope();	
 	loop->addScope( loop_true );
-	
-	libnovel::TrivialStatement* execute = new libnovel::TrivialStatement( loop_true );
+    libnovel::TrivialStatement* execute = new libnovel::TrivialStatement( loop_true );
+    pv  = new libnovel::ExtractInstruction( program, program->getStructure()->get(0) );
+	lpv = new libnovel::LoadInstruction( pv );
     execute->add( lpv );
-    
-	libnovel::TrivialStatement* epilog = new libnovel::TrivialStatement( scope );
 	
+	
+	
+	libnovel::TrivialStatement* epilog = new libnovel::TrivialStatement( scope );	
 	for( auto var : module->get< libnovel::Variable >() )
 	{
 		libnovel::StreamInstruction* output = new libnovel::StreamInstruction( libnovel::StreamInstruction::OUTPUT );
@@ -165,25 +183,22 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 		epilog->add( output );
 	}
 	
-	// CONTINUE HERE!!!
-
-	libnovel::BranchStatement* br = new libnovel::BranchStatement( scope );
-    br->add( new libnovel::NeqUnsignedInstruction( c, c ) );
-	br->addScope( new libnovel::SequentialScope() );
-	br->addScope( new libnovel::ParallelScope() );
-
-
+	
+	// BRANCH STATEMENT GENERATION TEST!
+	// libnovel::BranchStatement* br = new libnovel::BranchStatement( scope );
+    // br->add( new libnovel::NeqUnsignedInstruction( c, c ) );
+	// br->addScope( new libnovel::SequentialScope() );
+	// br->addScope( new libnovel::ParallelScope() );
+    
+	// generation of 'stand-alone' kernel function which is the main function of all target domains!
 	libnovel::Function* func = new libnovel::Function( "main" );
 	assert( func );
 	module->add( func );
-	
-    scope = new libnovel::SequentialScope();
-	assert( scope );
-	func->setContext( scope );
-
-	libnovel::TrivialStatement* stmt = new libnovel::TrivialStatement( scope );
-    stmt->add( new libnovel::CallInstruction( kernel ) );
-	
+	libnovel::SequentialScope* func_scope = new libnovel::SequentialScope();
+	assert( func_scope );
+	func->setContext( func_scope );
+	libnovel::TrivialStatement* stmt = new libnovel::TrivialStatement( func_scope );
+    stmt->add( new libnovel::CallInstruction( kernel ) );	
 }
 
 
@@ -341,18 +356,19 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::Rule& value )
 	string* name = new string( "rule_" + string( value.getName() ));
 	
 	
-	libnovel::Function* comp = new libnovel::Function( name->c_str() );
-	assert( comp );
-	module->add( comp );
-	
-	reference[ &value ] = comp;
+	libnovel::Function* rule_func = new libnovel::Function( name->c_str() );
+	assert( rule_func );
+	module->add( rule_func );
+
+	assert( reference.count( &value ) == 0 );
+	reference[ &value ] = rule_func;
 }
 void CasmIRToNovelPass::visit_interlog( libcasm_ir::Rule& value )
 {
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::Rule& value )
 {
-	reference[ &value ] = 0;
+	//reference[ &value ] = 0;
 }
 
 
