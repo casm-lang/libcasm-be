@@ -108,6 +108,7 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 			);
 			assert( ref );
 			ref->setRef< libnovel::Variable >( var );
+			var->setRef< libnovel::Reference >( ref );
 			
 			if( var == CasmRT_Program )
 			{
@@ -154,8 +155,16 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
     execute->add( lpv );
     
 	libnovel::TrivialStatement* epilog = new libnovel::TrivialStatement( scope );
-    epilog->add( new libnovel::NopInstruction() );
-    
+	
+	for( auto var : module->get< libnovel::Variable >() )
+	{
+		libnovel::StreamInstruction* output = new libnovel::StreamInstruction( libnovel::StreamInstruction::OUTPUT );
+		assert( output );
+		output->add( var );
+		output->add( &libnovel::StringLF );
+		epilog->add( output );
+	}
+	
 	// CONTINUE HERE!!!
 
 	libnovel::BranchStatement* br = new libnovel::BranchStatement( scope );
