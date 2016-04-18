@@ -58,6 +58,7 @@ bool CasmIRToNovelPass::run( libpass::PassResult& pr )
 
 
 
+static libnovel::Structure* CasmRT_Update  = 0;
 static libnovel::Structure* CasmRT_Integer = 0;
 static libnovel::Structure* CasmRT_RulePtr = 0;
 static libnovel::Variable*  CasmRT_Program = 0;
@@ -92,6 +93,7 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 	assert( scope );
 	kernel->setContext( scope );
 	
+	
 	assert( CasmRT_Program );
 	libnovel::Reference* program = 0;
 	
@@ -118,6 +120,36 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 			}
 		}
 	}
+
+
+	libnovel::Structure* struct_update = new libnovel::Structure( "Update" );
+	new libnovel::Structure( "location", &libnovel::TypeId, struct_update );
+	new libnovel::Structure( "value", &libnovel::TypeB64, struct_update );
+	module->add( struct_update );
+	CasmRT_Update = struct_update;
+	CasmRT_Update->getType()->bind( CasmRT_Update );
+    libnovel::Memory* mem = new libnovel::Memory( struct_update, 32 );
+	module->add( mem );
+	
+	if( module->has< libnovel::Memory >() )
+	{
+		for( auto mem : module->get< libnovel::Memory >() )
+		{
+			assert( libnovel::Value::isa< libnovel::Memory >( mem ) ); 
+			
+			libnovel::Reference* ref = new libnovel::Reference
+			( "mem"
+			, mem->getType()
+			, kernel
+			, libnovel::Reference::LINKAGE
+			);
+			assert( ref );
+			ref->setRef< libnovel::Memory >( mem );
+		    mem->setRef< libnovel::Reference >( ref );
+		}
+	}
+	
+	
 	
 	// this section needs to be covered directly in a separate "Linkage" or "VariableUsage" class
 	// libnovel::Reference* p = new libnovel::Reference
@@ -143,10 +175,10 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 	
 	libnovel::TrivialStatement* prolog = new libnovel::TrivialStatement( scope );
 	libnovel::Value* pv  = new libnovel::ExtractInstruction( program, program->getStructure()->get(0) );
-	//libnovel::IdInstruction* id = new libnovel::IdInstruction( init_rule_func );
-	//assert( id );
-	libnovel::Value* lpv = 0;// new libnovel::StoreInstruction( id, pv );
-	// PPA: CONTINUE HERE !!!
+	libnovel::IdInstruction* id = new libnovel::IdInstruction( init_rule_func );
+	assert( id );
+	libnovel::Value* lpv = new libnovel::StoreInstruction( id, pv );
+    prolog->add( lpv );
 	
 	libnovel::Value* pd  = new libnovel::ExtractInstruction( program, program->getStructure()->get(1) );
     libnovel::BitConstant* c = libnovel::BitConstant::create( 1, pd->getType()->getBitsize() );
@@ -169,8 +201,10 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
     libnovel::TrivialStatement* execute = new libnovel::TrivialStatement( loop_true );
     pv  = new libnovel::ExtractInstruction( program, program->getStructure()->get(0) );
 	lpv = new libnovel::LoadInstruction( pv );
-    execute->add( lpv );
-	
+
+	libnovel::CastInstruction* cast = new libnovel::CastInstruction( libnovel::Value::FUNCTION, lpv );
+	libnovel::CallInstruction* run_rule = new libnovel::CallInstruction( cast );
+    execute->add( run_rule );
 	
 	
 	libnovel::TrivialStatement* epilog = new libnovel::TrivialStatement( scope );	
@@ -179,7 +213,7 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 		libnovel::StreamInstruction* output = new libnovel::StreamInstruction( libnovel::StreamInstruction::OUTPUT );
 		assert( output );
 		output->add( var );
-		output->add( &libnovel::StringLF );
+		output->add( &libnovel::StringConstant::LF );
 		epilog->add( output );
 	}
 	
@@ -303,7 +337,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::Function& value )
 	assert( var );
 	module->add( var );
 	
-	string* name = new string( "location_" + string( value.getName() ));
+	string* name = new string( "casm_rt__location_" + string( value.getName() ));
 	libnovel::Intrinsic* func = new libnovel::Intrinsic( name->c_str() );
 	assert( func );
 	module->add( func );
@@ -353,7 +387,7 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Function& value )
 
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::Rule& value )
 {
-	string* name = new string( "rule_" + string( value.getName() ));
+	string* name = new string( "casm_rule__" + string( value.getName() ));
 	
 	
 	libnovel::Function* rule_func = new libnovel::Function( name->c_str() );
@@ -463,7 +497,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::LookupInstruction& value )
 	static libnovel::Intrinsic* lup = 0;
 	if( !lup )
 	{
-		lup = new libnovel::Intrinsic( "lookup" );
+		lup = new libnovel::Intrinsic( "casm_rt__lookup" );
 		assert( lup );
 		module->add( lup );
 
@@ -485,6 +519,13 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::LookupInstruction& value )
 		libnovel::SequentialScope* scope = new libnovel::SequentialScope();
 		assert( scope );
 		lup->setContext( scope );
+
+		libnovel::TrivialStatement* blk = new libnovel::TrivialStatement( scope );
+		libnovel::StreamInstruction* output = new libnovel::StreamInstruction( libnovel::StreamInstruction::OUTPUT );
+		assert( output );
+		output->add( libnovel::StringConstant::create( "lookup" ) );
+		output->add( &libnovel::StringConstant::LF );
+	    blk->add( output );
 	}
     
 	assert( value.getValues().size() == 1 );
@@ -522,10 +563,10 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::UpdateInstruction& value )
 	static libnovel::Intrinsic* upd = 0;
 	if( !upd )
 	{
-		upd = new libnovel::Intrinsic( "update" );
+		upd = new libnovel::Intrinsic( "casm_rt__update" );
 		assert( upd );
 		module->add( upd );
-
+		
 		libnovel::Reference* loc = new libnovel::Reference
 		( "update_location"
 		, &libnovel::TypeId // ASSUMTION: PPA: addresses stay in the 48-bit range!
@@ -543,6 +584,13 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::UpdateInstruction& value )
 		libnovel::SequentialScope* scope = new libnovel::SequentialScope();
 		assert( scope );
 		upd->setContext( scope );
+
+		libnovel::TrivialStatement* blk = new libnovel::TrivialStatement( scope );
+		libnovel::StreamInstruction* output = new libnovel::StreamInstruction( libnovel::StreamInstruction::OUTPUT );
+		assert( output );
+		output->add( libnovel::StringConstant::create( "update" ) );
+		output->add( &libnovel::StringConstant::LF );
+	    blk->add( output );
 	}
 	
 	assert( value.getValues().size() == 2 );
@@ -580,7 +628,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::AddInstruction& value )
 	static libnovel::Intrinsic* add = 0;
 	if( !add )
 	{
-		add = new libnovel::Intrinsic( "add" );
+		add = new libnovel::Intrinsic( "casm_rt__add" );
 		assert( add );
 		module->add( add );
 		
@@ -658,9 +706,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::AddInstruction& value )
 	stmt->add( call );	
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::AddInstruction& value )
-{
-	
-}
+{}
 
 
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::DivInstruction& value )
@@ -669,7 +715,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::DivInstruction& value )
 	static libnovel::Intrinsic* div = 0;
 	if( !div )
 	{
-		div = new libnovel::Intrinsic( "div" );
+		div = new libnovel::Intrinsic( "casm_rt__div" );
 		assert( div );
 		module->add( div );
 		
@@ -748,8 +794,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::DivInstruction& value )
 	stmt->add( call );
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::DivInstruction& value )
-{
-}
+{}
 
 
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::AndInstruction& value )
@@ -757,9 +802,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::AndInstruction& value )
 	DUMP_PREFIX; DUMP_POSTFIX;
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::AndInstruction& value )
-{
-	DUMP_PREFIX; DUMP_POSTFIX;
-}
+{}
 
 
 // CONSTANTS
