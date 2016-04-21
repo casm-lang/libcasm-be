@@ -62,6 +62,7 @@ static libnovel::Structure* CasmRT_Update  = 0;
 static libnovel::Structure* CasmRT_Integer = 0;
 static libnovel::Structure* CasmRT_RulePtr = 0;
 static libnovel::Variable*  CasmRT_Program = 0;
+static libnovel::Function*  CasmRT_signature_rule = 0;
 
 libnovel::Module* CasmIRToNovelPass::getModule( void ) const
 {
@@ -90,6 +91,17 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::Specification& value )
     libnovel::Memory* mem = new libnovel::Memory( CasmRT_Update, 32 );
 	module->add( mem );
 	CasmRT_UpdateSet = mem;
+	
+	assert( CasmRT_signature_rule == 0 );
+    CasmRT_signature_rule = new libnovel::Function( "casm_rt___rule_signature__" );
+	assert( CasmRT_signature_rule );
+	libnovel::Reference* ref_mem = new libnovel::Reference
+	( "ref_mem"
+	, CasmRT_UpdateSet->getType()
+	, CasmRT_signature_rule
+	);
+	assert( ref_mem );
+	
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 {
@@ -205,7 +217,9 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
     pv  = new libnovel::ExtractInstruction( program, program->getStructure()->get(0) );
 	lpv = new libnovel::LoadInstruction( pv );
 
-	libnovel::CastInstruction* cast = new libnovel::CastInstruction( libnovel::Value::FUNCTION, lpv );
+
+	
+	libnovel::CastInstruction* cast = new libnovel::CastInstruction( CasmRT_signature_rule, lpv );
 	libnovel::CallInstruction* run_rule = new libnovel::CallInstruction( cast );
 	run_rule->add( uset );
     execute->add( run_rule );
@@ -214,6 +228,7 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 	libnovel::TrivialStatement* epilog = new libnovel::TrivialStatement( scope );	
 	for( auto var : module->get< libnovel::Variable >() )
 	{
+		
 		libnovel::StreamInstruction* output = new libnovel::StreamInstruction( libnovel::StreamInstruction::OUTPUT );
 		assert( output );
 		output->add( var );
@@ -543,6 +558,15 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::LookupInstruction& value )
 		output->add( libnovel::StringConstant::create( "lookup" ) );
 		output->add( &libnovel::StringConstant::LF );
 	    blk->add( output );
+		
+		
+		// PPA: EXPERIMENTAL:
+		libnovel::CastInstruction* cast = new libnovel::CastInstruction( CasmRT_Integer, loc );
+		libnovel::StoreInstruction* sto = new libnovel::StoreInstruction( cast, val );
+		
+		blk->add( sto );
+		
+		
 	}
     
 	assert( value.getValues().size() == 1 );
@@ -654,7 +678,10 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::UpdateInstruction& value )
 	assert( update_src );
 	
 	libcasm_ir::Value* val = value.getValue(1);
-	assert( libcasm_ir::Value::isa< libcasm_ir::Instruction >( val ) );
+	assert
+	(  libcasm_ir::Value::isa< libcasm_ir::Instruction >( val )
+	or libcasm_ir::Value::isa< libcasm_ir::ConstantValue >( val )
+	);
 	libnovel::Value* update_val = reference[ val ];
 	assert( update_val );
 	
@@ -870,9 +897,33 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::IntegerConstant& value )
 	reference[ &value ] = const_int;
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::IntegerConstant& value )
+{}
+
+
+void CasmIRToNovelPass::visit_prolog( libcasm_ir::RulePointerConstant& value )
 {
+	// TODO: PPA: FIXME!!! resolve libcasm_ir::RulePointerConstant to correct libnovel::CallableUnit pointer/reference !!! 
+	// via value.getValue()
 	
+	libnovel::Value* val = libnovel::BitConstant::create( 0 /* FIXME: HACK! */,  CasmRT_RulePtr->get(0)->getType()->getBitsize() );
+	libnovel::Value* def = libnovel::BitConstant::create( value.isDefined(), CasmRT_RulePtr->get(1)->getType()->getBitsize() );
+	assert( val );
+	assert( def );
+	
+	libnovel::Value* const_rule = libnovel::StructureConstant::create( CasmRT_RulePtr, { val, def } );
+	
+	module->add( const_rule );
+	reference[ &value ] = const_rule;
 }
+void CasmIRToNovelPass::visit_epilog( libcasm_ir::RulePointerConstant& value )
+{}
+
+void CasmIRToNovelPass::visit_prolog( libcasm_ir::AgentConstant& value )
+{
+	// TODO: FIXME: PPA: this is obsolete for now!!!
+}
+void CasmIRToNovelPass::visit_epilog( libcasm_ir::AgentConstant& value )
+{}
 
 
 
