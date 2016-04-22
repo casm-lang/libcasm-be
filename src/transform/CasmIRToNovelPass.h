@@ -25,8 +25,8 @@
 #define _LIB_CASMBE_CASMIRTONOVELPASS_H_
 
 #include "libpass.h"
-#include "libcasm-be.h"
-#include "libcasm-ir.h"
+#include "libcasm-be.all.h"
+#include "libcasm-ir.all.h"
 #include "libnovel.all.h"
 
 /**
