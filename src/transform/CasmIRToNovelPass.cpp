@@ -634,7 +634,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::UpdateInstruction& value )
 		, upd
 		);
 		assert( loc );
-
+		
 		libnovel::Reference* val = new libnovel::Reference
 		( "update_value"
 		, CasmRT_Integer->getType() // ASSUMTION: PPA: values are numbers only for now! later, dyn ptr. too for SW-emit only!

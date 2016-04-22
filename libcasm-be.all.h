@@ -21,48 +21,15 @@
 //  along with libcasm-be. If not, see <http://www.gnu.org/licenses/>.
 //  
 
-#ifndef _LIB_CASMBE_CASMIRTONOVELPASS_H_
-#define _LIB_CASMBE_CASMIRTONOVELPASS_H_
+#ifndef _LIB_CASMBE_ALL_H_
+#define _LIB_CASMBE_ALL_H_
 
-#include "libpass.h"
 #include "libcasm-be.h"
-#include "libcasm-ir.h"
-#include "libnovel.all.h"
 
-/**
-   @brief    TODO
-   
-   TODO
-*/
+#include "src/transform/CasmIRToNovelPass.h"
+#include "src/transform/CasmIRToLLCodePass.h"
 
-namespace libcasm_be
-{	
-	class CasmIRToNovelPass : public libpass::Pass, public libcasm_ir::Visitor
-	{
-	private:
-		libnovel::Module* module;
-		
-		std::unordered_map< libcasm_ir::Value*, libnovel::Value* > reference;
-		
-	public:
-		static char id;
-			
-		virtual bool run( libpass::PassResult& pr );
-
-		libnovel::Module* getModule( void ) const;
-
-		LIB_CASMIR_VISITOR_INTERFACE;
-
-	private:
-		libnovel::Structure* factory ( libcasm_ir::Type* type );
-		
-		libnovel::Value* constant( libnovel::Type* type );
-	};
-}
-
-
-#endif /* _LIB_CASMBE_CASMIRTONOVELPASS_H_ */
-
+#endif // _LIB_CASMBE_ALL_H_
 
 //  
 //  Local variables:
