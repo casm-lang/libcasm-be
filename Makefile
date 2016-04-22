@@ -18,7 +18,7 @@
 #   GNU General Public License for more details.
 #   
 #   You should have received a copy of the GNU General Public License
-#   along with this program. If not, see <http://www.gnu.org/licenses/>.
+#   along with libcasm-be. If not, see <http://www.gnu.org/licenses/>.
 #   
 
 AR=ar
@@ -39,21 +39,19 @@ TARGET += libcasm-be.a
 CPPOBJECTS += obj/Backend.o
 CPPOBJECTS += obj/LLCodeBackend.o
 CPPOBJECTS += obj/CasmIRToLLCodePass.o
-
 CPPOBJECTS += obj/CasmIRToNovelPass.o
 
+INCLUDE += -I ./
 INCLUDE += -I ./src
 INCLUDE += -I ./src/analyze
 INCLUDE += -I ./src/transform
 INCLUDE += -I ../
-INCLUDE += -I ../pass/src
-INCLUDE += -I ../casm-fe/src
-INCLUDE += -I ../casm-fe/obj/src
-INCLUDE += -I ../casm-ir/src
-INCLUDE += -I ../casm-ir/src/analyze
-INCLUDE += -I ../casm-ir/src/transform
-INCLUDE += -I ../novel/src
-INCLUDE += -I ../novel/src/analyze
+
+INCLUDE += -I ../pass
+INCLUDE += -I ../casm-fe
+INCLUDE += -I ../casm-ir
+INCLUDE += -I ../novel
+
 
 default: obj $(TARGET)
 

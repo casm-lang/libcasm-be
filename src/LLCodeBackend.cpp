@@ -18,16 +18,16 @@
 //  GNU General Public License for more details.
 //  
 //  You should have received a copy of the GNU General Public License
-//  along with this program. If not, see <http://www.gnu.org/licenses/>.
+//  along with libcasm-be. If not, see <http://www.gnu.org/licenses/>.
 //  
 
 #include "LLCodeBackend.h"
 
-using namespace libcasm_ir;
+//using namespace libcasm_ir;
 using namespace libcasm_be;
 
 
-const char* LLCodeBackend::getRegister( Value* value, u1 let_flag )
+const char* LLCodeBackend::getRegister( libcasm_ir::Value* value, u1 let_flag )
 {
 	if( register_cache.size() == 0 )
 	{
@@ -42,16 +42,16 @@ const char* LLCodeBackend::getRegister( Value* value, u1 let_flag )
 	}
 	
 	std::string cnt = std::to_string( register_count );
-    if( Value::isa< ConstantValue >( value ) and not Value::isa< Identifier >( value ) )
+    if( libcasm_ir::Value::isa< libcasm_ir::ConstantValue >( value ) and not libcasm_ir::Value::isa< libcasm_ir::Identifier >( value ) )
 	{
     	register_cache[ value ] = std::string( "@.c" + cnt );
 	}
-    else if( Value::isa< Function >( value ) )
+    else if( libcasm_ir::Value::isa< libcasm_ir::Function >( value ) )
 	{
     	register_cache[ value ] = std::string( "@" + std::string( value->getName() ) );
 		return register_cache[ value ].c_str();
 	}
-    else if( Value::isa< Block >( value ) or Value::isa< Statement >( value ) )
+    else if( libcasm_ir::Value::isa< libcasm_ir::Block >( value ) or libcasm_ir::Value::isa< libcasm_ir::Statement >( value ) )
 	{
 		std::string lbl = std::to_string( label_count );
 		label_count++;
@@ -64,7 +64,7 @@ const char* LLCodeBackend::getRegister( Value* value, u1 let_flag )
 	}
 	else
 	{
-		if( Value::isa< Identifier >( value ) )
+		if( libcasm_ir::Value::isa< libcasm_ir::Identifier >( value ) )
 		{
 			return value->getName();
 		}
@@ -78,15 +78,15 @@ const char* LLCodeBackend::getRegister( Value* value, u1 let_flag )
 	return register_cache[ value ].c_str();
 }
 
-const char* getType( Type* t );
+const char* getType( libcasm_ir::Type* t );
 
-const char* getType( Value* value )
+const char* getType( libcasm_ir::Value* value )
 {
-	Type* t = value->getType();
+	libcasm_ir::Type* t = value->getType();
 	
-	if( Value::isa< Function >( value )
-	 or Value::isa< Derived  >( value )
-	 or Value::isa< Builtin  >( value )
+	if( libcasm_ir::Value::isa< libcasm_ir::Function >( value )
+	 or libcasm_ir::Value::isa< libcasm_ir::Derived  >( value )
+	 or libcasm_ir::Value::isa< libcasm_ir::Builtin  >( value )
 	 	)
 	{
 		t = t->getResultType();
@@ -95,33 +95,33 @@ const char* getType( Value* value )
 	return getType( t );
 }
 
-const char* getType( Type* t )
+const char* getType( libcasm_ir::Type* t )
 {
 	assert( t );
 	
 	u64 uid = t->getID();
 	
-	if( uid == AgentType.getID() )
+	if( uid == libcasm_ir::AgentType.getID() )
 	{
 		return "Agent";
 	}
-	else if( uid == RulePointerType.getID() )
+	else if( uid == libcasm_ir::RulePointerType.getID() )
 	{
 		return "Rule";
 	}
-	else if( uid == BooleanType.getID() )
+	else if( uid == libcasm_ir::BooleanType.getID() )
 	{
 		return "Bool";
 	}
-	else if( uid == IntegerType.getID() )
+	else if( uid == libcasm_ir::IntegerType.getID() )
 	{
 		return "Int";
 	}
-	else if( uid == StringType.getID() )
+	else if( uid == libcasm_ir::StringType.getID() )
 	{
 		return "Str";
 	}
-	else if( t->getIDKind() == Type::ID::BIT )
+	else if( t->getIDKind() == libcasm_ir::Type::ID::BIT )
 	{
 		static std::unordered_map< u16, std::string > cache;
 		auto result = cache.find( t->getBitsize() );
@@ -140,9 +140,9 @@ const char* getType( Type* t )
 }
 
 #define INDENT "  "
-static void getIndent( std::stringstream& indent, ExecutionSemanticsBlock* ir )
+static void getIndent( std::stringstream& indent, libcasm_ir::ExecutionSemanticsBlock* ir )
 {
-	assert( Value::isa< ExecutionSemanticsBlock >( ir ) );
+	assert( libcasm_ir::Value::isa< libcasm_ir::ExecutionSemanticsBlock >( ir ) );
 	
 	indent << INDENT;
 	for( u32 i = 0; i < ir->getPseudoState(); i++ )
@@ -151,35 +151,35 @@ static void getIndent( std::stringstream& indent, ExecutionSemanticsBlock* ir )
 	}
 }
 
-static void getIndent( std::stringstream& indent, Statement* ir )
+static void getIndent( std::stringstream& indent, libcasm_ir::Statement* ir )
 {
-	assert( Value::isa< Statement >( ir ) );
+	assert( libcasm_ir::Value::isa< libcasm_ir::Statement >( ir ) );
 	
 	indent << INDENT;
 
 	if( ir->getScope() )
 	{
-		getIndent( indent, ((ExecutionSemanticsBlock*)ir->getScope()) );
+		getIndent( indent, ((libcasm_ir::ExecutionSemanticsBlock*)ir->getScope()) );
 	}
 }
 
-static void getIndent( std::stringstream& indent, Instruction* ir )
+static void getIndent( std::stringstream& indent, libcasm_ir::Instruction* ir )
 {
-	assert( Value::isa< Instruction >( ir ) );
+	assert( libcasm_ir::Value::isa< libcasm_ir::Instruction >( ir ) );
 	
 	// indent << INDENT;
-	getIndent( indent, ((Statement*)ir->getStatement()) );
+	getIndent( indent, ((libcasm_ir::Statement*)ir->getStatement()) );
 }
 
 
-void LLCodeBackend::lifetime_start( FILE* f, Instruction* ir )
+void LLCodeBackend::lifetime_start( FILE* f, libcasm_ir::Instruction* ir )
 {
 	return;
 	
 	std::stringstream indent;	
 	getIndent( indent, ir );
 
-	if( Value::isa< LocationInstruction >( ir ) )
+	if( libcasm_ir::Value::isa< libcasm_ir::LocationInstruction >( ir ) )
 	{
 		fprintf
 		( f
@@ -212,7 +212,7 @@ void LLCodeBackend::lifetime_start( FILE* f, Instruction* ir )
 	);
 }
 
-void LLCodeBackend::lifetime_end( FILE* f, Instruction* ir )
+void LLCodeBackend::lifetime_end( FILE* f, libcasm_ir::Instruction* ir )
 {
 	return;
 	
@@ -221,7 +221,7 @@ void LLCodeBackend::lifetime_end( FILE* f, Instruction* ir )
 
 	const char* postfix = ".ptr";
 
-	if( Value::isa< LocationInstruction >( ir ) )
+	if( libcasm_ir::Value::isa< libcasm_ir::LocationInstruction >( ir ) )
 	{
 		return;
 		postfix = "";
@@ -243,12 +243,12 @@ void LLCodeBackend::lifetime_end( FILE* f, Instruction* ir )
 
 
 
-void LLCodeBackend::emit_instruction( FILE* f, Instruction* ir, const char* alias = 0 )
+void LLCodeBackend::emit_instruction( FILE* f, libcasm_ir::Instruction* ir, const char* alias = 0 )
 {
 	std::vector< const char* > reg_type;
 	std::vector< const char* > reg_name;
 	
-	assert( Value::isa< Instruction >( ir ) );
+	assert( libcasm_ir::Value::isa< libcasm_ir::Instruction >( ir ) );
 
 	std::stringstream indent;	
 	getIndent( indent, ir );
@@ -302,11 +302,11 @@ void LLCodeBackend::emit_instruction( FILE* f, Instruction* ir, const char* alia
 	i32 cnt = 0;
     for( auto value : ir->getValues() )
 	{
-		if( Value::isa< Instruction >( value ) )
+		if( libcasm_ir::Value::isa< libcasm_ir::Instruction >( value ) )
 		{
 			if( reg_name[ cnt ][ 0 ] == '%' && reg_name[ cnt ][ 1 ] == '.' )
 			{
-				lifetime_end( f, (Instruction*)value );
+				lifetime_end( f, (libcasm_ir::Instruction*)value );
 			}
 		}
 		cnt++;
@@ -316,7 +316,7 @@ void LLCodeBackend::emit_instruction( FILE* f, Instruction* ir, const char* alia
 }
 
 
-void LLCodeBackend::emit_scope( FILE* f, ExecutionSemanticsBlock* ir )
+void LLCodeBackend::emit_scope( FILE* f, libcasm_ir::ExecutionSemanticsBlock* ir )
 {
 	std::stringstream indent;
 	getIndent( indent, ir );
@@ -360,7 +360,7 @@ void LLCodeBackend::emit_scope( FILE* f, ExecutionSemanticsBlock* ir )
 	fprintf( f, "%s; end%s @ %lu\n", indent.str().c_str(), kind, ps );	
 }
 
-void LLCodeBackend::emit_statement( FILE* f, Statement* ir )
+void LLCodeBackend::emit_statement( FILE* f, libcasm_ir::Statement* ir )
 {
 	std::stringstream indent;
 	getIndent( indent, ir );
@@ -370,7 +370,7 @@ void LLCodeBackend::emit_statement( FILE* f, Statement* ir )
 	fprintf( f, "%s;\n", indent.str().c_str() );
 }
 
-void LLCodeBackend::emit_constant( FILE* f, Value* ir, const char* ty, const char* val, u1 def )
+void LLCodeBackend::emit_constant( FILE* f, libcasm_ir::Value* ir, const char* ty, const char* val, u1 def )
 {
     fprintf
 	( f 
@@ -385,14 +385,14 @@ void LLCodeBackend::emit_constant( FILE* f, Value* ir, const char* ty, const cha
 	);
 }
 
-void LLCodeBackend::emit( FILE* f, AgentConstant* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::AgentConstant* ir )
 {
     emit_constant( f, ir, "i8*", "null", ir->isDefined() );
 }
 
-void LLCodeBackend::emit( FILE* f, RulePointerConstant* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::RulePointerConstant* ir )
 {
-	Rule* rule = ir->getValue();
+	libcasm_ir::Rule* rule = ir->getValue();
 	std::string val = "null";
 		
 	if( rule )
@@ -404,17 +404,17 @@ void LLCodeBackend::emit( FILE* f, RulePointerConstant* ir )
 	emit_constant( f, ir, "%libcasm-rt.RuleAddr", val.c_str(), ir->isDefined() );
 }
 
-void LLCodeBackend::emit( FILE* f, BooleanConstant* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::BooleanConstant* ir )
 {
 	emit_constant( f, ir, "i1", to_string( ir->getValue() ).c_str(), ir->isDefined() );
 }
 
-void LLCodeBackend::emit( FILE* f, IntegerConstant* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::IntegerConstant* ir )
 {
 	emit_constant( f, ir, "i64", to_string( ir->getValue() ).c_str(), ir->isDefined() );
 }
 
-void LLCodeBackend::emit( FILE* f, BitConstant* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::BitConstant* ir )
 {
 	emit_constant
 	( f
@@ -425,7 +425,7 @@ void LLCodeBackend::emit( FILE* f, BitConstant* ir )
 	);
 }
 
-void LLCodeBackend::emit( FILE* f, StringConstant* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::StringConstant* ir )
 {
 	std::string s( ir->getValue() );
 	
@@ -450,11 +450,11 @@ void LLCodeBackend::emit( FILE* f, StringConstant* ir )
 	emit_constant( f, ir, "i8*", r.c_str(), ir->isDefined() );
 }
 
-void LLCodeBackend::emit( FILE* f, Function* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::Function* ir )
 {
 	u1 bound = true;
 
-	const std::vector< Type* >& params = ir->getType()->getParameters();
+	const std::vector< libcasm_ir::Type* >& params = ir->getType()->getParameters();
 
 	
 	fprintf( f, "; %s : ", getRegister( ir ) );
@@ -464,12 +464,12 @@ void LLCodeBackend::emit( FILE* f, Function* ir )
 		
 		switch( ty->getIDKind() )
 		{
-		    case Type::ID::INTEGER:
+		    case libcasm_ir::Type::ID::INTEGER:
 			{
 				bound = false;
 				break;
 			}
-		    case Type::ID::BIT:
+		    case libcasm_ir::Type::ID::BIT:
 			{
 				if( ty->getBitsize() > 12 )
 				{
@@ -505,7 +505,7 @@ void LLCodeBackend::emit( FILE* f, Function* ir )
 	{
 		if( params.size() == 1 and bound )
 		{
-			if( params[0]->getIDKind() == Type::ID::BIT )
+			if( params[0]->getIDKind() == libcasm_ir::Type::ID::BIT )
 			{
 				fprintf
 				( f
@@ -534,7 +534,7 @@ void LLCodeBackend::emit( FILE* f, Function* ir )
 				assert( 0 && "1-ary 'bound' function parameter not implemented yet!" );
 			}
 		}
-		else if( params.size() == 1 and params[0]->getIDKind() == Type::ID::INTEGER )
+		else if( params.size() == 1 and params[0]->getIDKind() == libcasm_ir::Type::ID::INTEGER )
 		{
 			fprintf
 			( f
@@ -549,7 +549,7 @@ void LLCodeBackend::emit( FILE* f, Function* ir )
 	}
 }
 
-void LLCodeBackend::emit( FILE* f, Derived* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::Derived* ir )
 {
 	derived_mode = true;
     register_count = 0;	
@@ -589,7 +589,7 @@ void LLCodeBackend::emit( FILE* f, Derived* ir )
 	fprintf( f, "\n" );
 }
 
-void LLCodeBackend::emit( FILE* f, Rule* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::Rule* ir )
 {
 	fprintf( f, "define linkonce_odr void @%s( %%libcasm-rt.updateset* %%.uset ) #0\n", ir->getName() );
 	fprintf( f, "{\n" );
@@ -607,35 +607,35 @@ void LLCodeBackend::emit( FILE* f, Rule* ir )
 }
 
 
-void LLCodeBackend::emit( FILE* f, ParallelBlock* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::ParallelBlock* ir )
 {
-    emit_scope( f, ((ExecutionSemanticsBlock*)ir) );
+    emit_scope( f, ((libcasm_ir::ExecutionSemanticsBlock*)ir) );
 }
 
-void LLCodeBackend::emit( FILE* f, SequentialBlock* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::SequentialBlock* ir )
 {	
-    emit_scope( f, ((ExecutionSemanticsBlock*)ir) );
+    emit_scope( f, ((libcasm_ir::ExecutionSemanticsBlock*)ir) );
 }
 
-void LLCodeBackend::emit( FILE* f, TrivialStatement* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::TrivialStatement* ir )
 {
-	emit_statement( f, ((Statement*)ir) );
+	emit_statement( f, ((libcasm_ir::Statement*)ir) );
 }
 
-void LLCodeBackend::emit( FILE* f, BranchStatement* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::BranchStatement* ir )
 {
 	std::stringstream indent;
 	getIndent( indent, ir->getScope() );
 	
 	fprintf( f, "%s; branch\n", indent.str().c_str() );	
 	
-	emit_statement( f, ((Statement*)ir) );
+	emit_statement( f, ((libcasm_ir::Statement*)ir) );
 	
 	for( auto value : ir->getBlocks() )
 	{
 		fprintf( f, "%s%s:\n", indent.str().c_str(), getRegister( value ) );
 		
-	    emit( f, ((ParallelBlock*)value) );
+	    emit( f, ((libcasm_ir::ParallelBlock*)value) );
 		
 		fprintf( f, "%s%sbr label %%%s\n", indent.str().c_str(), INDENT, getRegister( ir ) );
 	}
@@ -644,7 +644,7 @@ void LLCodeBackend::emit( FILE* f, BranchStatement* ir )
 	fprintf( f, "%s; endbranch\n", indent.str().c_str() );
 }
 		
-void LLCodeBackend::emit( FILE* f, BranchInstruction* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::BranchInstruction* ir )
 {
 	std::stringstream indent;
 	getIndent( indent, ir );
@@ -669,19 +669,19 @@ void LLCodeBackend::emit( FILE* f, BranchInstruction* ir )
 }
 
 
-static u64 switch_bits( Value* ir )
+static u64 switch_bits( libcasm_ir::Value* ir )
 {
 	switch( ir->getType()->getIDKind() )
 	{
-	    case Type::ID::BOOLEAN:
+	    case libcasm_ir::Type::ID::BOOLEAN:
 		{
 			return 2;
 		}
-	    case Type::ID::INTEGER:
+	    case libcasm_ir::Type::ID::INTEGER:
 		{
 			return 65;
 		}
-	    case Type::ID::BIT:
+	    case libcasm_ir::Type::ID::BIT:
 		{
 		    return ir->getType()->getBitsize() + 1;
 		}
@@ -692,19 +692,19 @@ static u64 switch_bits( Value* ir )
 	}
 }
 
-void LLCodeBackend::emit( FILE* f, SwitchInstruction* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::SwitchInstruction* ir )
 {
 	std::stringstream indent;
 	getIndent( indent, ir );
 
-	Value* expr = ir->getValue(0);
+	libcasm_ir::Value* expr = ir->getValue(0);
 
-	const Statement* br_val = ir->getStatement();
-	assert( Value::isa< BranchStatement >( br_val ) );
-	BranchStatement* br_stmt = (BranchStatement*)br_val;
+	const libcasm_ir::Statement* br_val = ir->getStatement();
+	assert( libcasm_ir::Value::isa< libcasm_ir::BranchStatement >( br_val ) );
+	libcasm_ir::BranchStatement* br_stmt = (libcasm_ir::BranchStatement*)br_val;
 
-	const std::vector< Value* >& inst = ir->getValues();
-	const std::vector< Block* >& blks = br_stmt->getBlocks();
+	const std::vector< libcasm_ir::Value* >& inst = ir->getValues();
+	const std::vector< libcasm_ir::Block* >& blks = br_stmt->getBlocks();
 
 	const char* default_reg = 0;
 	
@@ -737,7 +737,7 @@ void LLCodeBackend::emit( FILE* f, SwitchInstruction* ir )
 	
 	for( u32 i = 1; i < inst.size(); i++ )
 	{
-		Value* swcase = inst[i];
+		libcasm_ir::Value* swcase = inst[i];
 
 		assert( expr->getType()->getID() == swcase->getType()->getID() && " invalid case statement! " );
 		
@@ -784,13 +784,13 @@ void LLCodeBackend::emit( FILE* f, SwitchInstruction* ir )
 }
 
 
-void LLCodeBackend::emit( FILE* f, LocationInstruction* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::LocationInstruction* ir )
 {
 	std::stringstream indent;
 	getIndent( indent, ir );
 	
-	Value* func = ir->getValue( 0 );
-	Type* tfunc = func->getType();
+	libcasm_ir::Value* func = ir->getValue( 0 );
+	libcasm_ir::Type* tfunc = func->getType();
 	
 	fprintf
 	( f
@@ -836,12 +836,12 @@ void LLCodeBackend::emit( FILE* f, LocationInstruction* ir )
 	lifetime_start( f, ir );
 }
 
-void LLCodeBackend::emit( FILE* f, LookupInstruction* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::LookupInstruction* ir )
 {
 	std::stringstream indent;
 	getIndent( indent, ir );
 
-	Value*  loc = ir->getValue( 0 );
+	libcasm_ir::Value*  loc = ir->getValue( 0 );
 	
 	fprintf
 	( f
@@ -851,7 +851,7 @@ void LLCodeBackend::emit( FILE* f, LookupInstruction* ir )
 	, getRegister( loc )
 	);
 		
-	lifetime_end( f, (Instruction*)loc );
+	lifetime_end( f, (libcasm_ir::Instruction*)loc );
 
 	fprintf
 	( f
@@ -865,7 +865,7 @@ void LLCodeBackend::emit( FILE* f, LookupInstruction* ir )
 	lifetime_start( f, ir );
 }
 
-void LLCodeBackend::emit( FILE* f, UpdateInstruction* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::UpdateInstruction* ir )
 {
 	std::stringstream indent;
 	getIndent( indent, ir );
@@ -882,30 +882,30 @@ void LLCodeBackend::emit( FILE* f, UpdateInstruction* ir )
 	, getRegister( ir->getRHS() )
 	);
 	
-	if( Value::isa< Instruction >( ir->getLHS() ) )
+	if( libcasm_ir::Value::isa< libcasm_ir::Instruction >( ir->getLHS() ) )
 	{
-		lifetime_end( f, ((Instruction*)ir->getLHS()) );
+		lifetime_end( f, ((libcasm_ir::Instruction*)ir->getLHS()) );
 	}
-	if( Value::isa< Instruction >( ir->getRHS() ) )
+	if( libcasm_ir::Value::isa< libcasm_ir::Instruction >( ir->getRHS() ) )
 	{
-		lifetime_end( f, ((Instruction*)ir->getRHS()) );
+		lifetime_end( f, ((libcasm_ir::Instruction*)ir->getRHS()) );
 	}
 }
 
-void LLCodeBackend::emit( FILE* f, CallInstruction* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::CallInstruction* ir )
 {
 	std::stringstream indent;
 	getIndent( indent, ir ); 
 	
 	const char* call_prefix = 0;
 	
-	Value* symbol = ir->getValue(0);
+	libcasm_ir::Value* symbol = ir->getValue(0);
 	
-	if( Value::isa< Builtin >( symbol ) )
+	if( libcasm_ir::Value::isa< libcasm_ir::Builtin >( symbol ) )
 	{
 		call_prefix = "libcasm-rt.";
 	}
-	else if(  Value::isa< Derived >( symbol ) )
+	else if(  libcasm_ir::Value::isa< libcasm_ir::Derived >( symbol ) )
 	{
 		call_prefix = "";
 	}
@@ -945,7 +945,7 @@ void LLCodeBackend::emit( FILE* f, CallInstruction* ir )
 	fprintf( f, " )\n" );
 }
 
-void LLCodeBackend::emit( FILE* f, PrintInstruction* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::PrintInstruction* ir )
 {
     std::stringstream indent;
 	getIndent( indent, ir ); 
@@ -960,7 +960,7 @@ void LLCodeBackend::emit( FILE* f, PrintInstruction* ir )
 	}
 }
 
-void LLCodeBackend::emit( FILE* f, LetInstruction* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::LetInstruction* ir )
 {
 	std::stringstream indent;
 	getIndent( indent, ir ); 
@@ -980,7 +980,7 @@ void LLCodeBackend::emit( FILE* f, LetInstruction* ir )
 	);
 }
 
-void LLCodeBackend::emit( FILE* f, AssertInstruction* ir )
+void LLCodeBackend::emit( FILE* f, libcasm_ir::AssertInstruction* ir )
 {
 	std::stringstream indent;
 	getIndent( indent, ir ); 
@@ -989,23 +989,23 @@ void LLCodeBackend::emit( FILE* f, AssertInstruction* ir )
 }
 
 
-void LLCodeBackend::emit( FILE* f, AddInstruction* ir ) { emit_instruction( f, ir ); }
-void LLCodeBackend::emit( FILE* f, SubInstruction* ir ) { emit_instruction( f, ir ); }
-void LLCodeBackend::emit( FILE* f, MulInstruction* ir ) { emit_instruction( f, ir ); }
-void LLCodeBackend::emit( FILE* f, DivInstruction* ir ) { emit_instruction( f, ir ); }
-void LLCodeBackend::emit( FILE* f, RivInstruction* ir ) { emit_instruction( f, ir ); }
-void LLCodeBackend::emit( FILE* f, ModInstruction* ir ) { emit_instruction( f, ir ); }
-void LLCodeBackend::emit( FILE* f, EquInstruction* ir ) { emit_instruction( f, ir ); }
-void LLCodeBackend::emit( FILE* f, NeqInstruction* ir ) { emit_instruction( f, ir ); }
-void LLCodeBackend::emit( FILE* f, LthInstruction* ir ) { emit_instruction( f, ir ); }
-void LLCodeBackend::emit( FILE* f, LeqInstruction* ir ) { emit_instruction( f, ir ); }
-void LLCodeBackend::emit( FILE* f, GthInstruction* ir ) { emit_instruction( f, ir ); }
-void LLCodeBackend::emit( FILE* f, GeqInstruction* ir ) { emit_instruction( f, ir ); }
-void LLCodeBackend::emit( FILE* f,  OrInstruction* ir ) { emit_instruction( f, ir ); }
-void LLCodeBackend::emit( FILE* f, XorInstruction* ir ) { emit_instruction( f, ir ); }
-void LLCodeBackend::emit( FILE* f, AndInstruction* ir ) { emit_instruction( f, ir ); }
-void LLCodeBackend::emit( FILE* f, NotInstruction* ir ) { emit_instruction( f, ir ); }
-void LLCodeBackend::emit( FILE* f, MovInstruction* ir ) { emit_instruction( f, ir ); }
+void LLCodeBackend::emit( FILE* f, libcasm_ir::AddInstruction* ir ) { emit_instruction( f, ir ); }
+void LLCodeBackend::emit( FILE* f, libcasm_ir::SubInstruction* ir ) { emit_instruction( f, ir ); }
+void LLCodeBackend::emit( FILE* f, libcasm_ir::MulInstruction* ir ) { emit_instruction( f, ir ); }
+void LLCodeBackend::emit( FILE* f, libcasm_ir::DivInstruction* ir ) { emit_instruction( f, ir ); }
+void LLCodeBackend::emit( FILE* f, libcasm_ir::RivInstruction* ir ) { emit_instruction( f, ir ); }
+void LLCodeBackend::emit( FILE* f, libcasm_ir::ModInstruction* ir ) { emit_instruction( f, ir ); }
+void LLCodeBackend::emit( FILE* f, libcasm_ir::EquInstruction* ir ) { emit_instruction( f, ir ); }
+void LLCodeBackend::emit( FILE* f, libcasm_ir::NeqInstruction* ir ) { emit_instruction( f, ir ); }
+void LLCodeBackend::emit( FILE* f, libcasm_ir::LthInstruction* ir ) { emit_instruction( f, ir ); }
+void LLCodeBackend::emit( FILE* f, libcasm_ir::LeqInstruction* ir ) { emit_instruction( f, ir ); }
+void LLCodeBackend::emit( FILE* f, libcasm_ir::GthInstruction* ir ) { emit_instruction( f, ir ); }
+void LLCodeBackend::emit( FILE* f, libcasm_ir::GeqInstruction* ir ) { emit_instruction( f, ir ); }
+void LLCodeBackend::emit( FILE* f, libcasm_ir::OrInstruction*  ir ) { emit_instruction( f, ir ); }
+void LLCodeBackend::emit( FILE* f, libcasm_ir::XorInstruction* ir ) { emit_instruction( f, ir ); }
+void LLCodeBackend::emit( FILE* f, libcasm_ir::AndInstruction* ir ) { emit_instruction( f, ir ); }
+void LLCodeBackend::emit( FILE* f, libcasm_ir::NotInstruction* ir ) { emit_instruction( f, ir ); }
+void LLCodeBackend::emit( FILE* f, libcasm_ir::MovInstruction* ir ) { emit_instruction( f, ir ); }
 
 
 

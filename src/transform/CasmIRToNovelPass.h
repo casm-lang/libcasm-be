@@ -18,20 +18,16 @@
 //  GNU General Public License for more details.
 //  
 //  You should have received a copy of the GNU General Public License
-//  along with this program. If not, see <http://www.gnu.org/licenses/>.
+//  along with libcasm-be. If not, see <http://www.gnu.org/licenses/>.
 //  
 
 #ifndef _LIB_CASMBE_CASM_IR_TO_NOVEL_PASS_H_
 #define _LIB_CASMBE_CASM_IR_TO_NOVEL_PASS_H_
 
-#include "Pass.h"
-
-#include "libcasm-ir.h"
+#include "libpass.h"
 #include "libcasm-be.h"
+#include "libcasm-ir.h"
 #include "libnovel.h"
-
-#include "CasmIRDumpPass.h"
-#include "NovelDumpPass.h"
 
 /**
    @brief    TODO

@@ -18,16 +18,16 @@
 //  GNU General Public License for more details.
 //  
 //  You should have received a copy of the GNU General Public License
-//  along with this program. If not, see <http://www.gnu.org/licenses/>.
+//  along with libcasm-be. If not, see <http://www.gnu.org/licenses/>.
 //  
 
 #include "CasmIRToLLCodePass.h"
 
-using namespace libcasm_ir;
 using namespace libcasm_be;
 
 
 char CasmIRToLLCodePass::id = 0;
+
 
 static libpass::PassRegistration< CasmIRToLLCodePass > PASS
 ( "CASM IR to LLVM IR"
@@ -59,12 +59,12 @@ bool CasmIRToLLCodePass::run( libpass::PassResult& pr )
 	printf( "%s:%i: [%s] '%s'\n", __FILE__, __LINE__, __FUNCTION__, output_name );
 	
 	
-	Value::SymbolTable& symbols = *Value::getSymbols();
+	libcasm_ir::Value::SymbolTable& symbols = *libcasm_ir::Value::getSymbols();
 
 	const char* init_rule = 0;
 	for( auto value : symbols[".agent"] )
 	{
-		RulePointerConstant* rule_ptr = ((Agent*)value)->getInitRulePointer();
+		libcasm_ir::RulePointerConstant* rule_ptr = ((libcasm_ir::Agent*)value)->getInitRulePointer();
 		
 		if( rule_ptr )
 		{
@@ -85,31 +85,31 @@ bool CasmIRToLLCodePass::run( libpass::PassResult& pr )
 		// 	emit( output, value) ;
 		// }
 		// else
-		if( Value::isa< AgentConstant >( value ) )
+		if( libcasm_ir::Value::isa< libcasm_ir::AgentConstant >( value ) )
 		{
-			emit( output, ((AgentConstant*)value) );
+			emit( output, ((libcasm_ir::AgentConstant*)value) );
 		}
-		else if( Value::isa< RulePointerConstant >( value ) )
+		else if( libcasm_ir::Value::isa< libcasm_ir::RulePointerConstant >( value ) )
 		{
-			emit( output, ((RulePointerConstant*)value) );
+			emit( output, ((libcasm_ir::RulePointerConstant*)value) );
 		}
-		else if( Value::isa< BooleanConstant >( value ) )
+		else if( libcasm_ir::Value::isa< libcasm_ir::BooleanConstant >( value ) )
 		{
-			emit( output, ((BooleanConstant*)value) );
+			emit( output, ((libcasm_ir::BooleanConstant*)value) );
 		}
-		else if( Value::isa< IntegerConstant >( value ) )
+		else if( libcasm_ir::Value::isa< libcasm_ir::IntegerConstant >( value ) )
 		{
-			emit( output, ((IntegerConstant*)value) );
+			emit( output, ((libcasm_ir::IntegerConstant*)value) );
 		}
-		else if( Value::isa< BitConstant >( value ) )
+		else if( libcasm_ir::Value::isa< libcasm_ir::BitConstant >( value ) )
 		{
-			emit( output, ((BitConstant*)value) );
+			emit( output, ((libcasm_ir::BitConstant*)value) );
 		}
-		else if( Value::isa< StringConstant >( value ) )
+		else if( libcasm_ir::Value::isa< libcasm_ir::StringConstant >( value ) )
 		{
-			emit( output, ((StringConstant*)value) );
+			emit( output, ((libcasm_ir::StringConstant*)value) );
 		}
-		else if( Value::isa< Identifier >( value ) )
+		else if( libcasm_ir::Value::isa< libcasm_ir::Identifier >( value ) )
 		{
 		    continue;
 		}
@@ -124,8 +124,8 @@ bool CasmIRToLLCodePass::run( libpass::PassResult& pr )
 
 	for( auto value : symbols[".function"] )
 	{
-		assert( Value::isa< Function >( value ) );		
-		emit( output, ((Function*)value) );
+		assert( libcasm_ir::Value::isa< libcasm_ir::Function >( value ) );		
+		emit( output, ((libcasm_ir::Function*)value) );
 	}
 	
 	fprintf( output, "\n" );
@@ -133,8 +133,8 @@ bool CasmIRToLLCodePass::run( libpass::PassResult& pr )
 	
 	for( auto value : symbols[".derived"] )
 	{
-		assert( Value::isa< Derived >( value ) );		
-		emit( output, ((Derived*)value) );		
+		assert( libcasm_ir::Value::isa< libcasm_ir::Derived >( value ) );		
+		emit( output, ((libcasm_ir::Derived*)value) );		
 	}
 	
 	fprintf( output, "\n" );
@@ -142,8 +142,8 @@ bool CasmIRToLLCodePass::run( libpass::PassResult& pr )
 	
 	for( auto value : symbols[".rule"] )
 	{
-		assert( Value::isa< Rule >( value ) );		
-		emit( output, ((Rule*)value) );		
+		assert( libcasm_ir::Value::isa< libcasm_ir::Rule >( value ) );		
+		emit( output, ((libcasm_ir::Rule*)value) );		
 	}
 
 #define IND "  "
