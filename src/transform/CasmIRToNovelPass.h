@@ -27,6 +27,7 @@
 #include "libpass.h"
 #include "libcasm-be.all.h"
 #include "libcasm-ir.all.h"
+#include "libcasm-rt.h"
 #include "libnovel.all.h"
 
 /**

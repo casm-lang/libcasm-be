@@ -50,6 +50,7 @@ INCLUDE += -I ../
 INCLUDE += -I ../pass
 INCLUDE += -I ../casm-fe
 INCLUDE += -I ../casm-ir
+INCLUDE += -I ../casm-rt
 INCLUDE += -I ../novel
 
 
