@@ -83,6 +83,8 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::Specification& value )
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 {
+	std::unordered_map< libcasm_ir::Function*, libnovel::Reference* > function2linkage;
+	
     // CASM RT KERNEL
 	libnovel::Function* kernel = new libnovel::Function( value.getName() );
 	assert( kernel );
@@ -94,30 +96,32 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 	
 	libnovel::Reference* program = 0;
 	
-	if( module->has< libnovel::Variable >() )
+	for( auto function : value.get< libcasm_ir::Function >() )
 	{
-		for( auto var : module->get< libnovel::Variable >() )
+		assert( function and libcasm_ir::Value::isa< libcasm_ir::Function >( function ) );
+		libcasm_ir::Function* f = (libcasm_ir::Function*)function;
+	    libnovel::Variable* v = libcasm_rt::FunctionState::create( *f );
+		
+	    libnovel::Reference* ref = new libnovel::Reference
+		( ((libnovel::Variable*)v)->getIdent()
+		, v->getType()
+		, kernel
+		, libnovel::Reference::LINKAGE
+		);
+		assert( ref );
+		ref->setRef< libnovel::Variable >( v );
+		v->setRef< libnovel::Reference >( ref );
+		
+		if( v == libcasm_rt::ProgramFunctionState::create() )
 		{
-			assert( libnovel::Value::isa< libnovel::Variable >( var ) ); 
-			
-			libnovel::Reference* ref = new libnovel::Reference
-			( ((libnovel::Variable*)var)->getIdent()
-			, var->getType()
-			, kernel
-			, libnovel::Reference::LINKAGE
-			);
-			assert( ref );
-			ref->setRef< libnovel::Variable >( var );
-			var->setRef< libnovel::Reference >( ref );
-			
-			if( var == libcasm_rt::ProgramFunctionState::create() )
-			{
-				assert( !program && " only one program variable is allowed! " );
-				program = ref;
-			}
+			assert( !program && " only one program variable is allowed! " );
+			program = ref;
 		}
+
+		function2linkage[ f ] = ref;
 	}
 	assert( program );
+	
 	
 	libnovel::Reference* uset = 0;
 	if( module->has< libnovel::Memory >() )
@@ -204,6 +208,48 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
     execute->add( run_rule );
 	
 	
+	for( auto function : value.get< libcasm_ir::Function >() )
+	{
+		assert( function and libcasm_ir::Value::isa< libcasm_ir::Function >( function ) );
+		libcasm_ir::Function* f = (libcasm_ir::Function*)function;
+	    libnovel::Variable* v = libcasm_rt::FunctionState::create( *f );
+		
+		libnovel::BranchStatement* branch = new libnovel::BranchStatement( loop_true );
+		
+		
+		
+		libnovel::Instruction* v_id = new libnovel::IdInstruction( v );
+		libnovel::Instruction* el = new libnovel::ExtractInstruction( uset, v_id ); // PPA: HACK!!! should be through hash!!!
+		
+		libnovel::Structure* update_type = libcasm_rt::Update::create();	
+	    libnovel::Instruction* ca = new libnovel::CastInstruction( update_type, el );
+		libnovel::Instruction* u_bra = new libnovel::ExtractInstruction( ca, update_type->get(0) );
+		libnovel::Instruction* l_bra = new libnovel::LoadInstruction( u_bra );		
+		branch->add( new libnovel::NeqUnsignedInstruction( l_bra, c ) );
+		
+		libnovel::SequentialScope* branch_apply = new libnovel::SequentialScope();	
+	    branch->addScope( branch_apply );
+		libnovel::TrivialStatement* stmt_apply = new libnovel::TrivialStatement( branch_apply );
+		
+		// PPA: HACK!!! should be through hash!!!
+	    // libnovel::Instruction* u_el = new libnovel::ExtractInstruction( uset, new libnovel::IdInstruction( v ) );
+	    // libnovel::Instruction* u_ca = new libnovel::CastInstruction( update_type, u_el );
+		//libnovel::Instruction* u_loc = new libnovel::ExtractInstruction( u_ca, update_type->get(1) );
+		libnovel::Instruction* u_val = new libnovel::ExtractInstruction( ca, update_type->get(2) );
+	    libnovel::Instruction* u_def = new libnovel::ExtractInstruction( ca, update_type->get(3) );
+
+		libnovel::Reference* f_ref = function2linkage[ f ];
+		libnovel::Instruction* f_val = new libnovel::ExtractInstruction( f_ref, f_ref->getStructure()->get(0) );
+		libnovel::Instruction* f_def = new libnovel::ExtractInstruction( f_ref, f_ref->getStructure()->get(1) );
+		
+		libnovel::Instruction* st_val = new libnovel::StoreInstruction( u_val, f_val );
+		libnovel::Instruction* st_def = new libnovel::StoreInstruction( u_def, f_def );
+	    
+		stmt_apply->add( st_val );
+		stmt_apply->add( st_def );		
+	}
+	
+	
 	libnovel::TrivialStatement* epilog = new libnovel::TrivialStatement( scope );	
 	for( auto var : module->get< libnovel::Variable >() )
 	{
@@ -215,12 +261,6 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 	}
 	
 	
-	// BRANCH STATEMENT GENERATION TEST!
-	// libnovel::BranchStatement* br = new libnovel::BranchStatement( scope );
-    // br->add( new libnovel::NeqUnsignedInstruction( c, c ) );
-	// br->addScope( new libnovel::SequentialScope() );
-	// br->addScope( new libnovel::ParallelScope() );
-    
 	// generation of 'stand-alone' kernel function which is the main function of all target domains!
 	libnovel::Function* func = new libnovel::Function( "main" );
 	assert( func );
