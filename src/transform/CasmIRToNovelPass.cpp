@@ -246,7 +246,7 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 		libnovel::Instruction* st_def = new libnovel::StoreInstruction( u_def, f_def );
 	    
 		stmt_apply->add( st_val );
-		stmt_apply->add( st_def );		
+		stmt_apply->add( st_def );
 	}
 	
 	
@@ -524,6 +524,32 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::UpdateInstruction& value )
 {
 }
 
+
+void CasmIRToNovelPass::visit_prolog( libcasm_ir::PrintInstruction& value )
+{
+    libnovel::StreamInstruction* obj = new libnovel::StreamInstruction( libnovel::StreamInstruction::OUTPUT );
+	assert( obj );
+
+	for( libcasm_ir::Value* v : value.getValues() )
+	{
+		//obj->add( reference[ v ] );
+	}
+	obj->add( &libnovel::StringConstant::LF );
+	
+	libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
+	assert( parent );	
+	libnovel::Statement* stmt = (libnovel::Statement*)reference[ parent ];
+	assert( stmt );
+	
+	stmt->add( obj );
+	
+	reference[ &value ] = obj;
+}
+void CasmIRToNovelPass::visit_epilog( libcasm_ir::PrintInstruction& value )
+{
+}
+
+
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::AddInstruction& value )
 {
 	// TODO: FIXME: PPA: this add function has to be moved later into the 'run-time' implementation
@@ -722,6 +748,28 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::IntegerConstant& value )
 	reference[ &value ] = const_int;
 }
 void CasmIRToNovelPass::visit_epilog( libcasm_ir::IntegerConstant& value )
+{}
+
+
+void CasmIRToNovelPass::visit_prolog( libcasm_ir::StringConstant& value )
+{
+	printf( "%s:%i: '%s'\n", __FILE__, __LINE__, value.getValue() );
+	
+	libnovel::Structure* type = libcasm_rt::String::create( value );
+	
+	module->add( type );
+	
+	libnovel::Value* val = libnovel::StringConstant::create( value.getValue() );
+	libnovel::Value* def = libnovel::BitConstant::create( value.isDefined(), type->get(1)->getType()->getBitsize() );
+	assert( val );
+	assert( def );
+    
+	libnovel::Value* const_string = libnovel::StructureConstant::create( type, { val, def } );
+	
+	module->add( const_string );
+	reference[ &value ] = const_string;
+}
+void CasmIRToNovelPass::visit_epilog( libcasm_ir::StringConstant& value )
 {}
 
 
