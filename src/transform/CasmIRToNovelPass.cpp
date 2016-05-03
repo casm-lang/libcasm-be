@@ -117,7 +117,7 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 			assert( !program && " only one program variable is allowed! " );
 			program = ref;
 		}
-
+		
 		function2linkage[ f ] = ref;
 	}
 	assert( program );
@@ -249,16 +249,15 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 		stmt_apply->add( st_def );
 	}
 	
-	
-	libnovel::TrivialStatement* epilog = new libnovel::TrivialStatement( scope );	
-	for( auto var : module->get< libnovel::Variable >() )
-	{
-		libnovel::StreamInstruction* output = new libnovel::StreamInstruction( libnovel::StreamInstruction::OUTPUT );
-		assert( output );
-		output->add( var );
-		output->add( &libnovel::StringConstant::LF );
-		epilog->add( output );
-	}
+    // libnovel::TrivialStatement* epilog = new libnovel::TrivialStatement( scope );	
+	// for( auto var : module->get< libnovel::Variable >() )
+	// {
+	// 	libnovel::StreamInstruction* output = new libnovel::StreamInstruction( libnovel::StreamInstruction::OUTPUT );
+	// 	assert( output );
+	// 	output->add( var );
+	// 	output->add( &libnovel::StringConstant::LF );
+	// 	epilog->add( output );
+	// }
 	
 	
 	// generation of 'stand-alone' kernel function which is the main function of all target domains!
@@ -527,12 +526,43 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::UpdateInstruction& value )
 
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::PrintInstruction& value )
 {
+	static libnovel::StringConstant* undef = 0;
+	if( not undef )
+	{
+		undef = libnovel::StringConstant::create( "undef" );
+		module->add( undef );
+	}
+	
     libnovel::StreamInstruction* obj = new libnovel::StreamInstruction( libnovel::StreamInstruction::OUTPUT );
 	assert( obj );
 
 	for( libcasm_ir::Value* v : value.getValues() )
 	{
-		//obj->add( reference[ v ] );
+		libnovel::Value*     e = reference[ v ];
+		//libnovel::Structure* s = libcasm_rt::Type::create( *v );
+
+		if( libcasm_ir::Value::isa< libcasm_ir::StringConstant >( v ) )
+		{
+			assert( libnovel::Value::isa< libnovel::StructureConstant >( e ) );
+			libnovel::StructureConstant* c = (libnovel::StructureConstant*)e;
+			
+			assert( libnovel::Value::isa< libnovel::BitConstant >( c->getElements()[1] ) );
+			libnovel::BitConstant* def = (libnovel::BitConstant*)c->getElements()[1];
+			if( def->getValue()[0] == 0 )
+			{
+				e = undef;
+			}
+			else
+			{
+				e = c->getElements()[0];
+			}
+		}
+		else
+		{
+			assert( !" unsupported/unimplemented print instr argument! " );
+		}
+		
+		obj->add( e );
 	}
 	obj->add( &libnovel::StringConstant::LF );
 	
@@ -552,66 +582,8 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::PrintInstruction& value )
 
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::AddInstruction& value )
 {
-	// TODO: FIXME: PPA: this add function has to be moved later into the 'run-time' implementation
-	static libnovel::Intrinsic* add = 0;
-	if( !add )
-	{
-		add = new libnovel::Intrinsic( "casm_rt__add" );
-		assert( add );
-		module->add( add );
-		
-		libnovel::Reference* ra = new libnovel::Reference
-		( "ra"
-		, libcasm_rt::Integer::create()->getType() // TODO: FIXME: this type has to be maybe changed in the future!!! 
-		, add
-		);
-		assert( ra );
-	    
-		libnovel::Reference* rb = new libnovel::Reference
-		( "rb"
-		, libcasm_rt::Integer::create()->getType() // TODO: FIXME: this type has to be maybe changed in the future!!! 
-		, add
-		);
-		assert( rb );
-
-		libnovel::Reference* rt = new libnovel::Reference
-		( "rt"
-		, libcasm_rt::Integer::create()->getType() // TODO: FIXME: this type has to be maybe changed in the future!!! 
-		, add
-		, libnovel::Reference::OUTPUT
-		);
-		assert( rt );
-		
-		libnovel::ParallelScope* scope = new libnovel::ParallelScope();
-		assert( scope );
-		add->setContext( scope );
-		
-		libnovel::ExtractInstruction* rav = new libnovel::ExtractInstruction( ra, ra->getStructure()->get(0) );
-		libnovel::ExtractInstruction* rad = new libnovel::ExtractInstruction( ra, ra->getStructure()->get(1) );
-		libnovel::ExtractInstruction* rbv = new libnovel::ExtractInstruction( rb, rb->getStructure()->get(0) );
-		libnovel::ExtractInstruction* rbd = new libnovel::ExtractInstruction( rb, rb->getStructure()->get(1) );
-		
-		libnovel::LoadInstruction* lav  = new libnovel::LoadInstruction( rav );
-		libnovel::LoadInstruction* lad  = new libnovel::LoadInstruction( rad );
-		libnovel::LoadInstruction* lbv  = new libnovel::LoadInstruction( rbv );
-		libnovel::LoadInstruction* lbd  = new libnovel::LoadInstruction( rbd );
-		
-		libnovel::AddSignedInstruction* icv = new libnovel::AddSignedInstruction( lav, lbv );
-		libnovel::AndInstruction* icd = new libnovel::AndInstruction( lad, lbd );
-
-		libnovel::ExtractInstruction* rtv = new libnovel::ExtractInstruction( rt, rt->getStructure()->get(0) );
-		libnovel::ExtractInstruction* rtd = new libnovel::ExtractInstruction( rt, rt->getStructure()->get(1) );
-		
-		libnovel::StoreInstruction* scv = new libnovel::StoreInstruction( icv, rtv );
-		libnovel::StoreInstruction* scd = new libnovel::StoreInstruction( icd, rtd );
-		
-		libnovel::TrivialStatement* stmt_v = new libnovel::TrivialStatement( scope );
-		libnovel::TrivialStatement* stmt_d = new libnovel::TrivialStatement( scope );
-		stmt_v->add( scv );
-		stmt_d->add( scd );
-	}
-	
-	libnovel::CallInstruction* call = new libnovel::CallInstruction( add );
+	libnovel::CallableUnit*    obj  = libcasm_rt::Instruction::create( value, module );
+	libnovel::CallInstruction* call = new libnovel::CallInstruction( obj );
 	assert( call );
 	
 	libnovel::Value* lhs = reference[ value.getLHS() ];
@@ -622,7 +594,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::AddInstruction& value )
 	assert( rhs );
     call->add( rhs );
 	
-	libnovel::AllocInstruction* result = new libnovel::AllocInstruction( add->getOutParameters()[0]->getType() );
+	libnovel::AllocInstruction* result = new libnovel::AllocInstruction( obj->getOutParameters()[0]->getType() );
 	assert( result );
 	call->add( result );	
 	reference[ &value ] = result;
@@ -639,67 +611,8 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::AddInstruction& value )
 
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::DivInstruction& value )
 {
-	// TODO: FIXME: PPA: this div function has to be moved later into the 'run-time' implementation
-	static libnovel::Intrinsic* div = 0;
-	if( !div )
-	{
-		div = new libnovel::Intrinsic( "casm_rt__div" );
-		assert( div );
-		module->add( div );
-		
-		libnovel::Reference* ra = new libnovel::Reference
-		( "ra"
-		, libcasm_rt::Integer::create()->getType() // TODO: FIXME: this type has to be maybe changed in the future!!! 
-		, div
-		);
-		assert( ra );
-
-		libnovel::Reference* rb = new libnovel::Reference
-		( "rb"
-		, libcasm_rt::Integer::create()->getType() // TODO: FIXME: this type has to be maybe changed in the future!!! 
-		, div
-		);
-		assert( rb );
-
-		libnovel::Reference* rt = new libnovel::Reference
-		( "rt"
-		, libcasm_rt::Integer::create()->getType() // TODO: FIXME: this type has to be maybe changed in the future!!! 
-		, div
-		, libnovel::Reference::OUTPUT
-		);
-		assert( rt );
-		
-		libnovel::SequentialScope* scope = new libnovel::SequentialScope();
-		assert( scope );
-		div->setContext( scope );
-		
-		libnovel::ExtractInstruction* rav = new libnovel::ExtractInstruction( ra, ra->getStructure()->get(0) );
-		libnovel::ExtractInstruction* rad = new libnovel::ExtractInstruction( ra, ra->getStructure()->get(1) );
-		libnovel::ExtractInstruction* rbv = new libnovel::ExtractInstruction( rb, rb->getStructure()->get(0) );
-		libnovel::ExtractInstruction* rbd = new libnovel::ExtractInstruction( rb, rb->getStructure()->get(1) );
-
-		libnovel::LoadInstruction* lav  = new libnovel::LoadInstruction( rav );
-		libnovel::LoadInstruction* lad  = new libnovel::LoadInstruction( rad );
-		libnovel::LoadInstruction* lbv  = new libnovel::LoadInstruction( rbv );
-		libnovel::LoadInstruction* lbd  = new libnovel::LoadInstruction( rbd );
-		
-		libnovel::DivSignedInstruction* icv = new libnovel::DivSignedInstruction( lav, lbv );
-		libnovel::AndInstruction* icd = new libnovel::AndInstruction( lad, lbd );
-
-		
-		libnovel::ExtractInstruction* rtv = new libnovel::ExtractInstruction( rt, rt->getStructure()->get(0) );
-		libnovel::ExtractInstruction* rtd = new libnovel::ExtractInstruction( rt, rt->getStructure()->get(1) );
-		
-		libnovel::StoreInstruction* scv = new libnovel::StoreInstruction( icv, rtv );
-		libnovel::StoreInstruction* scd = new libnovel::StoreInstruction( icd, rtd );
-		
-		libnovel::TrivialStatement* stmt_v = new libnovel::TrivialStatement( scope );
-		libnovel::TrivialStatement* stmt_d = new libnovel::TrivialStatement( scope );
-		stmt_v->add( scv );
-		stmt_d->add( scd );
-	}
-	
-	libnovel::CallInstruction* call = new libnovel::CallInstruction( div );
+	libnovel::CallableUnit*    obj  = libcasm_rt::Instruction::create( value, module );
+	libnovel::CallInstruction* call = new libnovel::CallInstruction( obj );
 	assert( call );
 	
 	libnovel::Value* lhs = reference[ value.getLHS() ];
@@ -710,7 +623,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::DivInstruction& value )
 	assert( rhs );
     call->add( rhs );
 	
-	libnovel::AllocInstruction* result = new libnovel::AllocInstruction( div->getOutParameters()[0]->getType() );
+	libnovel::AllocInstruction* result = new libnovel::AllocInstruction( obj->getOutParameters()[0]->getType() );
 	assert( result );
 	call->add( result );	
 	reference[ &value ] = result;
