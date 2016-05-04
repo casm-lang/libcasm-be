@@ -36,9 +36,9 @@ CPPFLAG += -Wall
 
 TARGET += libcasm-be.a
 
-CPPOBJECTS += obj/Backend.o
-CPPOBJECTS += obj/LLCodeBackend.o
-CPPOBJECTS += obj/CasmIRToLLCodePass.o
+#CPPOBJECTS += obj/Backend.o
+#CPPOBJECTS += obj/LLCodeBackend.o
+#CPPOBJECTS += obj/CasmIRToLLCodePass.o
 CPPOBJECTS += obj/CasmIRToNovelPass.o
 
 INCLUDE += -I ./

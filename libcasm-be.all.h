@@ -27,7 +27,8 @@
 #include "libcasm-be.h"
 
 #include "src/transform/CasmIRToNovelPass.h"
-#include "src/transform/CasmIRToLLCodePass.h"
+
+//#include "src/transform/CasmIRToLLCodePass.h"
 
 #endif // _LIB_CASMBE_ALL_H_
 

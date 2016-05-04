@@ -24,8 +24,9 @@
 #ifndef _LIB_CASMBE_H_
 #define _LIB_CASMBE_H_
 
-#include "src/Backend.h"
-#include "src/LLCodeBackend.h"
+// #include "src/Backend.h"
+// #include "src/LLCodeBackend.h"
+
 
 
 namespace libcasm_be
