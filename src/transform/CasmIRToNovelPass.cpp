@@ -95,6 +95,9 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 	libnovel::SequentialScope* scope = new libnovel::SequentialScope();
 	assert( scope );
 	kernel->setContext( scope );
+
+	
+	
 	
 	libnovel::Reference* program = 0;
 	
@@ -121,6 +124,8 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 		}
 		
 		function2linkage[ f ] = ref;
+
+		libcasm_rt::State::create()->add( v );
 	}
 	assert( program );
 	
@@ -154,6 +159,7 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 	);
 	ic_ref->setRef< libnovel::Interconnect >( libcasm_rt::State::create() );
 	libcasm_rt::State::create()->setRef< libnovel::Reference >( ic_ref );
+	
 	
     
 	// TODO: FIXME: this agent->rule->init_rule detection should be created directly in the AST to IR transf.
