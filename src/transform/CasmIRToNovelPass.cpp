@@ -590,7 +590,7 @@ void CasmIRToNovelPass::visit_prolog( libcasm_ir::UpdateInstruction& value )
 	
 	libnovel::CallInstruction* call = new libnovel::CallInstruction( upd );
 	assert( call );
-	call->add( caller->getInParameters()[0] );
+
 	call->add( caller->getInParameters()[1] );
 	call->add( update_src );
 	call->add( update_val );
