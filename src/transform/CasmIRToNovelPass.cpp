@@ -329,7 +329,7 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Function& value )
 
 void CasmIRToNovelPass::visit_prolog( libcasm_ir::Rule& value )
 {
-    const char* name = libstdhl::Allocator::string( "casm_rule__" + string( value.getName() ) );
+    const char* name = libstdhl::Allocator::string( "casm_rule_" + string( value.getName() ) );
 	
 	if( reference.count( &value ) > 0 )
 	{
