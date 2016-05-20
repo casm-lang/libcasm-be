@@ -254,8 +254,12 @@ void CasmIRToNovelPass::visit_epilog( libcasm_ir::Specification& value )
 		libnovel::Reference* f_ref = function2linkage[ f ];
 		libnovel::Instruction* f_val = new libnovel::ExtractInstruction( f_ref, f_ref->getStructure()->get(0) );
 		libnovel::Instruction* f_def = new libnovel::ExtractInstruction( f_ref, f_ref->getStructure()->get(1) );
+
 		
-		libnovel::Instruction* st_val = new libnovel::StoreInstruction( u_val, f_val );
+		libnovel::Instruction* l_val = new libnovel::LoadInstruction( u_val );
+		libnovel::Instruction* t_val = new libnovel::TruncationInstruction( l_val, f_val->getType() );
+		
+		libnovel::Instruction* st_val = new libnovel::StoreInstruction( t_val, f_val );
 		libnovel::Instruction* st_def = new libnovel::StoreInstruction( u_def, f_def );
 	    
 		stmt_apply->add( st_val );
