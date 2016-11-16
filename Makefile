@@ -45,8 +45,8 @@ INCLUDE += -I ./
 INCLUDE += -I ./src
 INCLUDE += -I ./src/analyze
 INCLUDE += -I ./src/transform
-INCLUDE += -I ../
 
+INCLUDE += -I ../stdhl
 INCLUDE += -I ../pass
 INCLUDE += -I ../casm-fe
 INCLUDE += -I ../casm-ir
