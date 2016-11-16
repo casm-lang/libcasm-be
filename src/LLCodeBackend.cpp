@@ -1013,7 +1013,7 @@ void LLCodeBackend::emit( FILE* f, libcasm_ir::MovInstruction* ir ) { emit_instr
 //  
 //  Local variables:
 //  mode: c++
-//  indent-tabs-mode: t
+//  indent-tabs-mode: nil
 //  c-basic-offset: 4
 //  tab-width: 4
 //  End:
