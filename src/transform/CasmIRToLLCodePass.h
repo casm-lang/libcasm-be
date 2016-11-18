@@ -24,33 +24,31 @@
 #ifndef _CASMIRTOLLCODEPASS_H_
 #define _CASMIRTOLLCODEPASS_H_
 
-#include "libpass.h"
 #include "libcasm-be.h"
 #include "libcasm-ir.h"
+#include "libpass.h"
 
 /**
    @brief    TODO
-   
+
    TODO
 */
 
 namespace libcasm_be
 {
 
-	class CasmIRToLLCodePass : public libpass::Pass, public LLCodeBackend
-	{
-	public:
-		static char id;
-			
-		virtual bool run( libpass::PassResult& pr );
-	};
-}
+    class CasmIRToLLCodePass : public libpass::Pass, public LLCodeBackend
+    {
+      public:
+        static char id;
 
+        virtual bool run( libpass::PassResult& pr );
+    };
+}
 
 #endif /* _CASMIRTOLLCODEPASS_H_ */
 
-
-//  
+//
 //  Local variables:
 //  mode: c++
 //  indent-tabs-mode: nil
@@ -58,4 +56,4 @@ namespace libcasm_be
 //  tab-width: 4
 //  End:
 //  vim:noexpandtab:sw=4:ts=4:
-//  
+//

@@ -24,48 +24,46 @@
 #ifndef _LIB_CASMBE_CASMIRTONOVELPASS_H_
 #define _LIB_CASMBE_CASMIRTONOVELPASS_H_
 
-#include "libpass.h"
 #include "libcasm-be.all.h"
 #include "libcasm-ir.all.h"
 #include "libcasm-rt.h"
 #include "libnovel.all.h"
+#include "libpass.h"
 
 /**
    @brief    TODO
-   
+
    TODO
 */
 
 namespace libcasm_be
-{	
-	class CasmIRToNovelPass : public libpass::Pass, public libcasm_ir::Visitor
-	{
-	private:
-		libnovel::Module* module;
-		
-		std::unordered_map< libcasm_ir::Value*, libnovel::Value* > reference;
-		
-	public:
-		static char id;
-			
-		virtual bool run( libpass::PassResult& pr );
+{
+    class CasmIRToNovelPass : public libpass::Pass, public libcasm_ir::Visitor
+    {
+      private:
+        libnovel::Module* module;
 
-		libnovel::Module* getModule( void ) const;
+        std::unordered_map< libcasm_ir::Value*, libnovel::Value* > reference;
 
-		LIB_CASMIR_VISITOR_INTERFACE;
+      public:
+        static char id;
 
-	private:
-		libnovel::Structure* factory ( libcasm_ir::Type* type );
-		
-		libnovel::Value* constant( libnovel::Type* type );
-	};
+        virtual bool run( libpass::PassResult& pr );
+
+        libnovel::Module* getModule( void ) const;
+
+        LIB_CASMIR_VISITOR_INTERFACE;
+
+      private:
+        libnovel::Structure* factory( libcasm_ir::Type* type );
+
+        libnovel::Value* constant( libnovel::Type* type );
+    };
 }
-
 
 #endif /* _LIB_CASMBE_CASMIRTONOVELPASS_H_ */
 
-
-//  
+//
 //  Local variables:
 //  mode: c++
 //  indent-tabs-mode: nil
@@ -73,4 +71,4 @@ namespace libcasm_be
 //  tab-width: 4
 //  End:
 //  vim:noexpandtab:sw=4:ts=4:
-//  
+//

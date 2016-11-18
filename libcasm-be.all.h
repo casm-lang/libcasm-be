@@ -32,7 +32,7 @@
 
 #endif // _LIB_CASMBE_ALL_H_
 
-//  
+//
 //  Local variables:
 //  mode: c++
 //  indent-tabs-mode: nil
@@ -40,4 +40,4 @@
 //  tab-width: 4
 //  End:
 //  vim:noexpandtab:sw=4:ts=4:
-//  
+//

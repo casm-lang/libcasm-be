@@ -27,18 +27,16 @@
 // #include "src/Backend.h"
 // #include "src/LLCodeBackend.h"
 
-
-
 namespace libcasm_be
 {
-	class CasmBE
-	{
-	};
+    class CasmBE
+    {
+    };
 }
 
 #endif // _LIB_CASM_BE_H_
 
-//  
+//
 //  Local variables:
 //  mode: c++
 //  indent-tabs-mode: nil
@@ -46,4 +44,4 @@ namespace libcasm_be
 //  tab-width: 4
 //  End:
 //  vim:noexpandtab:sw=4:ts=4:
-//  
+//
