@@ -611,19 +611,19 @@ void LLCodeBackend::emit( FILE* f, libcasm_ir::BranchStatement* ir )
     fprintf( f, "%s; endbranch\n", indent.str().c_str() );
 }
 
-void LLCodeBackend::emit( FILE* f, libcasm_ir::BranchInstruction* ir )
-{
-    std::stringstream indent;
-    getIndent( indent, ir );
+// void LLCodeBackend::emit( FILE* f, libcasm_ir::BranchInstruction* ir )
+// {
+//     std::stringstream indent;
+//     getIndent( indent, ir );
 
-    fprintf( f,
-        "%s%s = call i1 @libcasm-rt.branch.Bool( %%libcasm-rt.Bool* %s )\n",
-        indent.str().c_str(), getRegister( ir ), getRegister( ir->get() ) );
+//     fprintf( f,
+//         "%s%s = call i1 @libcasm-rt.branch.Bool( %%libcasm-rt.Bool* %s )\n",
+//         indent.str().c_str(), getRegister( ir ), getRegister( ir->get() ) );
 
-    fprintf( f, "%sbr i1 %s, label %%%s, label %%%s\n", indent.str().c_str(),
-        getRegister( ir ), getRegister( ir->getTrue() ),
-        getRegister( ir->getFalse() ) );
-}
+//     fprintf( f, "%sbr i1 %s, label %%%s, label %%%s\n", indent.str().c_str(),
+//         getRegister( ir ), getRegister( ir->getTrue() ),
+//         getRegister( ir->getFalse() ) );
+// }
 
 static u64 switch_bits( libcasm_ir::Value* ir )
 {

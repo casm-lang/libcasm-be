@@ -21,13 +21,14 @@
 //  along with libcasm-be. If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef _LIB_CASMBE_CASMIRTONOVELPASS_H_
-#define _LIB_CASMBE_CASMIRTONOVELPASS_H_
+#ifndef _LIB_CASMBE_CASMIRTOCSELIRPASS_H_
+#define _LIB_CASMBE_CASMIRTOCSELIRPASS_H_
 
 #include "libcasm-be.all.h"
+#include "libcasm-fe.all.h"
 #include "libcasm-ir.all.h"
 #include "libcasm-rt.h"
-#include "libnovel.all.h"
+#include "libcsel-ir.all.h"
 #include "libpass.h"
 
 /**
@@ -38,30 +39,30 @@
 
 namespace libcasm_be
 {
-    class CasmIRToNovelPass : public libpass::Pass, public libcasm_ir::Visitor
+    class CasmIRToCselIRPass : public libpass::Pass, public libcasm_ir::Visitor
     {
       private:
-        libnovel::Module* module;
+        libcsel_ir::Module* module;
 
-        std::unordered_map< libcasm_ir::Value*, libnovel::Value* > reference;
+        std::unordered_map< libcasm_ir::Value*, libcsel_ir::Value* > reference;
 
       public:
         static char id;
 
         virtual bool run( libpass::PassResult& pr );
 
-        libnovel::Module* getModule( void ) const;
+        libcsel_ir::Module* getModule( void ) const;
 
         LIB_CASMIR_VISITOR_INTERFACE;
 
       private:
-        libnovel::Structure* factory( libcasm_ir::Type* type );
+        libcsel_ir::Structure* factory( libcasm_ir::Type* type );
 
-        libnovel::Value* constant( libnovel::Type* type );
+        libcsel_ir::Value* constant( libcsel_ir::Type* type );
     };
 }
 
-#endif /* _LIB_CASMBE_CASMIRTONOVELPASS_H_ */
+#endif /* _LIB_CASMBE_CASMIRTOCSELIRPASS_H_ */
 
 //
 //  Local variables:

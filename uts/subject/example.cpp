@@ -21,23 +21,8 @@
 //  along with libcasm-be. If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef _LIB_CASMBE_ALL_H_
-#define _LIB_CASMBE_ALL_H_
+#include "gtest/gtest.h"
 
-#include "libcasm-be.h"
-
-#include "src/transform/CasmIRToCselIRPass.h"
-
-//#include "src/transform/CasmIRToLLCodePass.h"
-
-#endif // _LIB_CASMBE_ALL_H_
-
-//
-//  Local variables:
-//  mode: c++
-//  indent-tabs-mode: nil
-//  c-basic-offset: 4
-//  tab-width: 4
-//  End:
-//  vim:noexpandtab:sw=4:ts=4:
-//
+TEST( libcasm_be__subject, example )
+{
+}

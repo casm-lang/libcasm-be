@@ -66,9 +66,9 @@ void Backend::emit( FILE* f, Value* ir )
             emit( f, ( (AssertInstruction*)ir ) );
             break;
 
-        case Value::BRANCH_INSTRUCTION:
-            emit( f, ( (BranchInstruction*)ir ) );
-            break;
+        // case Value::BRANCH_INSTRUCTION:
+        //     emit( f, ( (BranchInstruction*)ir ) );
+        //     break;
 
         case Value::SKIP_INSTRUCTION: /*nop*/
             break;

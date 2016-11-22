@@ -21,57 +21,106 @@
 #   along with libcasm-be. If not, see <http://www.gnu.org/licenses/>.
 #
 
-AR=ar
+.PHONY:
 
-CC=clang
-CCFLAG += -std=c11
-CCFLAG += -g -O0
-CCFLAG += -Wall
+default: debug
 
-CPP=clang
-CPPFLAG += -std=c++11
-CPPFLAG += -g -O0
-CPPFLAG += -Wall
-#CPPFLAG += -Wextra
+help:
+	@echo "TODO"
 
-TARGET += libcasm-be.a
+REPO = libcasm-be
 
-#CPPOBJECTS += obj/Backend.o
-#CPPOBJECTS += obj/LLCodeBackend.o
-#CPPOBJECTS += obj/CasmIRToLLCodePass.o
-CPPOBJECTS += obj/CasmIRToNovelPass.o
+TARGET = $(REPO).a
 
-INCLUDE += -I ./
-INCLUDE += -I ./src
-INCLUDE += -I ./src/analyze
-INCLUDE += -I ./src/transform
-
-INCLUDE += -I ../stdhl
-INCLUDE += -I ../pass
-INCLUDE += -I ../casm-fe
-INCLUDE += -I ../casm-ir
-INCLUDE += -I ../casm-rt
-INCLUDE += -I ../novel
+TEST_TARGET = test-$(REPO)
 
 
-default: obj $(TARGET)
+CP  = $(shell find src -name '*.cpp' | cut -d'.' -f1)
+CO  = $(CP:%=obj/%.o)
 
-obj:
-	mkdir -p obj
+CI += -I ./
+CI += -I ./src
+CI += -I ./src/analyze
+CI += -I ./src/transform
 
-obj/%.o: src/%.cpp
-	@echo "CPP " $<
-	@$(CPP) $(CPPFLAG) $(INCLUDE) -c $< -o $@
+CI += -I ../stdhl
+CI += -I ../pass
+CI += -I ../casm-fe
+CI += -I ../casm-ir
+CI += -I ../casm-rt
+CI += -I ../csel-ir
 
-obj/%.o: src/analyze/%.cpp
-	@echo "CPP " $<
-	@$(CPP) $(CPPFLAG) $(INCLUDE) -c $< -o $@
+CL  =
 
-obj/%.o: src/transform/%.cpp
-	@echo "CPP " $<
-	@$(CPP) $(CPPFLAG) $(INCLUDE) -c $< -o $@
+CC  =
+CF  =
 
-$(TARGET): $(CPPOBJECTS)
+  %-gcc: CC = gcc
+%-clang: CC = clang
+
+  debug-%: CF += -O0 -g
+release-%: CF += -O3 -DNDEBUG
+
+linux%:  CF += -Wall -std=c++11
+linux%:  XF += -Wall -std=c11
+linux3%: CF += -m32
+linux6%: CF += -m64
+
+
+build: config $(TARGET)
+check: build $(TEST_TARGET)
+
+linux32-build: build
+linux64-build: build
+
+linux32-check: check
+linux64-check: check
+
+
+  debug-build-linux32-gcc:   linux32-build
+  debug-check-linux32-gcc:   linux32-check
+release-build-linux32-gcc:   linux32-build
+release-check-linux32-gcc:   linux32-check
+
+  debug-build-linux64-gcc:   linux64-build
+  debug-check-linux64-gcc:   linux64-check
+release-build-linux64-gcc:   linux64-build
+release-check-linux64-gcc:   linux64-check
+
+  debug-build-linux32-clang: linux32-build
+  debug-check-linux32-clang: linux32-check
+release-build-linux32-clang: linux32-build
+release-check-linux32-clang: linux32-check
+
+  debug-build-linux64-clang: linux64-build
+  debug-check-linux64-clang: linux64-check
+release-build-linux64-clang: linux64-build
+release-check-linux64-clang: linux64-check
+
+
+  debug:   debug-build-linux64-clang
+release: clean release-build-linux64-clang
+
+test:           debug-check-linux64-clang
+test-release: release-check-linux64-clang
+
+
+config: CFG=CC="$(CC)" CF="$(CF)"
+config:
+	@echo "CFG  $(CFG)"
+
+
+obj/%.o: %.cpp
+	@mkdir -p `dirname $@`
+	@echo "C++ " $<
+	@$(CC) $(CF) $(CI) -c $< -o $@
+
+obj/%.o: %.c
+	@mkdir -p `dirname $@`
+	@echo "C   " $<
+	@$(CC) $(CF) $(CI) -c $< -o $@
+
+$(TARGET): $(CO) $(CL)
 	@echo "AR  " $@
 	@$(AR) rsc $@ $(filter %.o,$^)
 	@ranlib $@
@@ -81,3 +130,38 @@ clean:
 	@rm -rf obj
 	@echo "RM  " $(TARGET)
 	@rm -f $(TARGET)
+	@echo "RM  " $(TEST_TARGET)
+	@rm -f $(TEST_TARGET)
+
+
+#TEST_TARGET = $(TARGET:%.a=%-test.a)
+
+TF   = $(shell find uts -name '*.cpp' | cut -d'.' -f1)
+TO = $(TF:%=obj/%.o)
+
+TI  = -I ../gtest/googletest/include
+TI += -I ../gtest/googletest
+
+TL  = -lstdc++
+TL += -lm
+TL += -lpthread
+
+obj/uts/%.o: uts/%.cpp
+	@mkdir -p `dirname $@`
+	@echo "C++ " $<
+	@$(CC) $(CF) $(TI) $(CI) -c $< -o $@
+
+$(TEST_TARGET): $(TO) $(CO) $(TARGET)
+	@echo "LD " $@
+	@$(CC) \
+	  $(CF) \
+	  $(TI) \
+	  $(CI) \
+	  $(TL) \
+	  -o $@ \
+	  $(TO) \
+	  $(TARGET) \
+	  ../gtest/googletest/src/gtest-all.cc \
+	  ../gtest/googletest/src/gtest_main.cc 
+	@echo "RUN " $@
+	@./$@
