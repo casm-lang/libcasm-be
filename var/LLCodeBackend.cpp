@@ -414,7 +414,9 @@ void LLCodeBackend::emit( FILE* f, libcasm_ir::StringConstant* ir )
     fprintf( f, "\"\n" );
 
     std::string r( "getelementptr inbounds( [ " + to_string( s.size() )
-                   + " x i8 ]* " + getRegister( ir ) + ".str, i32 0, i32 0 )" );
+                   + " x i8 ]* "
+                   + getRegister( ir )
+                   + ".str, i32 0, i32 0 )" );
 
     emit_constant( f, ir, "i8*", r.c_str(), ir->isDefined() );
 }

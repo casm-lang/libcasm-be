@@ -95,9 +95,9 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Specification& value )
         libcasm_ir::Function* f = (libcasm_ir::Function*)function;
         libcsel_ir::Variable* v = libcasm_rt::FunctionState::create( *f );
 
-        libcsel_ir::Reference* ref
-            = new libcsel_ir::Reference( ( (libcsel_ir::Variable*)v )->getIdent(),
-                v->getType(), kernel, libcsel_ir::Reference::LINKAGE );
+        libcsel_ir::Reference* ref = new libcsel_ir::Reference(
+            ( (libcsel_ir::Variable*)v )->getIdent(), v->getType(), kernel,
+            libcsel_ir::Reference::LINKAGE );
         assert( ref );
         ref->setRef< libcsel_ir::Variable >( v );
         v->setRef< libcsel_ir::Reference >( ref );
@@ -121,8 +121,8 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Specification& value )
         {
             assert( libcsel_ir::Value::isa< libcsel_ir::Memory >( mem ) );
 
-            libcsel_ir::Reference* ref = new libcsel_ir::Reference(
-                "uset", mem->getType(), kernel, libcsel_ir::Reference::LINKAGE );
+            libcsel_ir::Reference* ref = new libcsel_ir::Reference( "uset",
+                mem->getType(), kernel, libcsel_ir::Reference::LINKAGE );
             assert( ref );
             ref->setRef< libcsel_ir::Memory >( mem );
             mem->setRef< libcsel_ir::Reference >( ref );
@@ -148,7 +148,8 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Specification& value )
     libcasm_ir::Rule* init_rule = agent->getInitRulePointer()->getValue();
     libcsel_ir::Value* init_rule_func_val = reference[ init_rule ];
     assert( init_rule_func_val );
-    assert( libcsel_ir::Value::isa< libcsel_ir::Function >( init_rule_func_val ) );
+    assert(
+        libcsel_ir::Value::isa< libcsel_ir::Function >( init_rule_func_val ) );
     libcsel_ir::Function* init_rule_func
         = (libcsel_ir::Function*)init_rule_func_val;
 
@@ -156,7 +157,8 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Specification& value )
         = new libcsel_ir::TrivialStatement( scope );
     libcsel_ir::Value* pv = new libcsel_ir::ExtractInstruction(
         program, program->getStructure()->get( 0 ) );
-    libcsel_ir::IdInstruction* id = new libcsel_ir::IdInstruction( init_rule_func );
+    libcsel_ir::IdInstruction* id
+        = new libcsel_ir::IdInstruction( init_rule_func );
     assert( id );
     libcsel_ir::Value* lpv = new libcsel_ir::StoreInstruction( id, pv );
     prolog->add( lpv );
@@ -190,7 +192,8 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Specification& value )
 
     // libcsel_ir::CastInstruction* cast = new libcsel_ir::CastInstruction(
     // libcasm_rt::ProgramRuleSignature::create(), lpv );
-    // libcsel_ir::CallInstruction* run_rule = new libcsel_ir::CallInstruction( cast
+    // libcsel_ir::CallInstruction* run_rule = new libcsel_ir::CallInstruction(
+    // cast
     // );
 
     libcsel_ir::IdCallInstruction* run_rule = new libcsel_ir::IdCallInstruction(
@@ -221,7 +224,8 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Specification& value )
             = new libcsel_ir::CastInstruction( update_type, el );
         libcsel_ir::Instruction* u_bra
             = new libcsel_ir::ExtractInstruction( ca, update_type->get( 0 ) );
-        libcsel_ir::Instruction* l_bra = new libcsel_ir::LoadInstruction( u_bra );
+        libcsel_ir::Instruction* l_bra
+            = new libcsel_ir::LoadInstruction( u_bra );
         branch->add( new libcsel_ir::NeqUnsignedInstruction( l_bra, c ) );
 
         libcsel_ir::SequentialScope* branch_apply
@@ -231,7 +235,8 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Specification& value )
             = new libcsel_ir::TrivialStatement( branch_apply );
 
         // PPA: HACK!!! should be through hash!!!
-        // libcsel_ir::Instruction* u_el = new libcsel_ir::ExtractInstruction( uset,
+        // libcsel_ir::Instruction* u_el = new libcsel_ir::ExtractInstruction(
+        // uset,
         // new libcsel_ir::IdInstruction( v ) );
         // libcsel_ir::Instruction* u_ca = new libcsel_ir::CastInstruction(
         // update_type, u_el );
@@ -248,7 +253,8 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Specification& value )
         libcsel_ir::Instruction* f_def = new libcsel_ir::ExtractInstruction(
             f_ref, f_ref->getStructure()->get( 1 ) );
 
-        libcsel_ir::Instruction* l_val = new libcsel_ir::LoadInstruction( u_val );
+        libcsel_ir::Instruction* l_val
+            = new libcsel_ir::LoadInstruction( u_val );
         libcsel_ir::Instruction* t_val
             = new libcsel_ir::TruncationInstruction( l_val, f_val->getType() );
 
@@ -265,7 +271,8 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Specification& value )
     // scope );
     // for( auto var : module->get< libcsel_ir::Variable >() )
     // {
-    // 	libcsel_ir::StreamInstruction* output = new libcsel_ir::StreamInstruction(
+    // 	libcsel_ir::StreamInstruction* output = new
+    // libcsel_ir::StreamInstruction(
     // libcsel_ir::StreamInstruction::OUTPUT );
     // 	assert( output );
     // 	output->add( var );
@@ -298,7 +305,8 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Agent& value )
 void CasmIRToCselIRPass::visit_prolog( libcasm_ir::Function& value )
 {
     // TODO: FIXME: implement a Memory access if it is not a 0-ary function!
-    // libcsel_ir::Memory* mem = new libcsel_ir::Memory( factory( value.getType() ),
+    // libcsel_ir::Memory* mem = new libcsel_ir::Memory( factory(
+    // value.getType() ),
     // 1 );
 
     libcsel_ir::Variable* state = libcasm_rt::FunctionState::create( value );
@@ -372,7 +380,8 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::ParallelBlock& value )
     {
         libcasm_ir::Rule* rule = value.getBound();
 
-        libcsel_ir::Function* comp = (libcsel_ir::Function*)( reference[ rule ] );
+        libcsel_ir::Function* comp
+            = (libcsel_ir::Function*)( reference[ rule ] );
         comp->setContext( scope );
     }
     else
@@ -462,7 +471,8 @@ void CasmIRToCselIRPass::visit_interlog( libcasm_ir::BranchStatement& value )
     libcsel_ir::Instruction* lv = new libcsel_ir::LoadInstruction( rv );
     libcsel_ir::Instruction* ld = new libcsel_ir::LoadInstruction( rd );
 
-    libcsel_ir::Instruction* rt = new libcsel_ir::EquUnsignedInstruction( lv, ld );
+    libcsel_ir::Instruction* rt
+        = new libcsel_ir::EquUnsignedInstruction( lv, ld );
 
     stmt->add( rt );
 }
@@ -497,7 +507,8 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::LocationInstruction& value )
     assert( call );
 
     assert( libcsel_ir::Value::isa< libcsel_ir::Intrinsic >( location_src ) );
-    libcsel_ir::Intrinsic* location_src_ptr = (libcsel_ir::Intrinsic*)location_src;
+    libcsel_ir::Intrinsic* location_src_ptr
+        = (libcsel_ir::Intrinsic*)location_src;
 
     assert( location_src_ptr->getOutParameters().size() == 1 );
 
@@ -536,7 +547,8 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::LookupInstruction& value )
     while( not libcsel_ir::Value::isa< libcsel_ir::CallableUnit >( context ) )
     {
         assert( libcsel_ir::Value::isa< libcsel_ir::Block >( context ) );
-        context = (libcsel_ir::Value*)( (libcsel_ir::Block*)context )->getParent();
+        context
+            = (libcsel_ir::Value*)( (libcsel_ir::Block*)context )->getParent();
     }
     assert( libcsel_ir::Value::isa< libcsel_ir::CallableUnit >( context ) );
     libcsel_ir::CallableUnit* caller = (libcsel_ir::CallableUnit*)context;
@@ -584,7 +596,8 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::UpdateInstruction& value )
     while( not libcsel_ir::Value::isa< libcsel_ir::CallableUnit >( context ) )
     {
         assert( libcsel_ir::Value::isa< libcsel_ir::Block >( context ) );
-        context = (libcsel_ir::Value*)( (libcsel_ir::Block*)context )->getParent();
+        context
+            = (libcsel_ir::Value*)( (libcsel_ir::Block*)context )->getParent();
     }
     assert( libcsel_ir::Value::isa< libcsel_ir::CallableUnit >( context ) );
     libcsel_ir::CallableUnit* caller = (libcsel_ir::CallableUnit*)context;
@@ -635,8 +648,10 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::PrintInstruction& value )
 
         if( libcasm_ir::Value::isa< libcasm_ir::StringConstant >( v ) )
         {
-            assert( libcsel_ir::Value::isa< libcsel_ir::StructureConstant >( e ) );
-            libcsel_ir::StructureConstant* c = (libcsel_ir::StructureConstant*)e;
+            assert(
+                libcsel_ir::Value::isa< libcsel_ir::StructureConstant >( e ) );
+            libcsel_ir::StructureConstant* c
+                = (libcsel_ir::StructureConstant*)e;
 
             assert( libcsel_ir::Value::isa< libcsel_ir::BitConstant >(
                 c->getElements()[ 1 ] ) );
@@ -804,7 +819,8 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::StringConstant& value )
 
     module->add( type );
 
-    libcsel_ir::Value* val = libcsel_ir::StringConstant::create( value.getValue() );
+    libcsel_ir::Value* val
+        = libcsel_ir::StringConstant::create( value.getValue() );
     libcsel_ir::Value* def = libcsel_ir::BitConstant::create(
         value.isDefined(), type->get( 1 )->getType()->getBitsize() );
     assert( val );
@@ -822,8 +838,9 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::StringConstant& value )
 
 void CasmIRToCselIRPass::visit_prolog( libcasm_ir::RulePointerConstant& value )
 {
-    libcsel_ir::Value* def = value.isDefined() ? &libcsel_ir::BitConstant::TRUE
-                                             : &libcsel_ir::BitConstant::FALSE;
+    libcsel_ir::Value* def = value.isDefined()
+                                 ? &libcsel_ir::BitConstant::TRUE
+                                 : &libcsel_ir::BitConstant::FALSE;
     libcsel_ir::Value* val = &libcsel_ir::BitConstant::NIL;
 
     libcasm_ir::Value* rule = value.getValue();
