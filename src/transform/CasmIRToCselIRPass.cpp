@@ -28,7 +28,10 @@ using namespace libcasm_be;
 char CasmIRToCselIRPass::id = 0;
 
 static libpass::PassRegistration< CasmIRToCselIRPass > PASS(
-    "CASM IR to CSELIR IR", "generates a CSELIR instance of CASM IR", 0, 0 );
+    "CASM IR to CSEL IR",
+    "translates the CASM IR to the CSEL intermeditate representation",
+    "ir2el",
+    0 );
 
 bool CasmIRToCselIRPass::run( libpass::PassResult& pr )
 {
