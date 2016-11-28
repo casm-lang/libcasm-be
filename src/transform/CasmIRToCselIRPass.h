@@ -49,8 +49,8 @@ namespace libcasm_be
       public:
         static char id;
 
-        virtual bool run( libpass::PassResult& pr );
-
+        bool run( libpass::PassResult& pr ) override final;
+        
         libcsel_ir::Module* getModule( void ) const;
 
         LIB_CASMIR_VISITOR_INTERFACE;

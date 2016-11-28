@@ -47,7 +47,7 @@ bool CasmIRToCselIRPass::run( libpass::PassResult& pr )
     pr.setResult< CasmIRToCselIRPass >( module );
     pr.setResult< libcsel_ir::CselIRDumpPass >( module );
 
-    return false;
+    return true;
 }
 
 libcsel_ir::Module* CasmIRToCselIRPass::getModule( void ) const
@@ -373,8 +373,6 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Rule& value )
 
 void CasmIRToCselIRPass::visit_prolog( libcasm_ir::ParallelBlock& value )
 {
-    printf( "asdf: %p\n", &value );
-
     libcsel_ir::ParallelScope* scope = new libcsel_ir::ParallelScope();
     assert( scope );
 
@@ -389,15 +387,13 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::ParallelBlock& value )
     }
     else
     {
-        if( not parent_scope->isParallel() )
-        {
-            assert( 0 );
-        }
-
         libcasm_ir::Value* parent = value.getParent();
         assert( parent );
-
-        scope->setParent( reference[ parent ] );
+        assert( reference[ parent ] );
+        
+        libcsel_ir::Scope* upper_scope = static_cast< libcsel_ir::Scope* >( reference[ parent ] );
+        upper_scope->add( scope );
+        scope->setParent( upper_scope );
     }
 
     reference[&value ] = scope;
@@ -408,13 +404,33 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::ParallelBlock& value )
 
 void CasmIRToCselIRPass::visit_prolog( libcasm_ir::SequentialBlock& value )
 {
-    DUMP_PREFIX;
-    DUMP_POSTFIX;
+    libcsel_ir::SequentialScope* scope = new libcsel_ir::SequentialScope();
+    assert( scope );
+
+    libcasm_ir::ExecutionSemanticsBlock* parent_scope = value.getScope();
+    if( !parent_scope )
+    {
+        libcasm_ir::Rule* rule = value.getBound();
+
+        libcsel_ir::Function* comp
+            = (libcsel_ir::Function*)( reference[ rule ] );
+        comp->setContext( scope );
+    }
+    else
+    {
+        libcasm_ir::Value* parent = value.getParent();
+        assert( parent );
+        assert( reference[ parent ] );
+        
+        libcsel_ir::Scope* upper_scope = static_cast< libcsel_ir::Scope* >( reference[ parent ] );
+        upper_scope->add( scope );
+        scope->setParent( upper_scope );
+    }
+    
+    reference[&value ] = scope;
 }
 void CasmIRToCselIRPass::visit_epilog( libcasm_ir::SequentialBlock& value )
 {
-    DUMP_PREFIX;
-    DUMP_POSTFIX;
 }
 
 void CasmIRToCselIRPass::visit_prolog( libcasm_ir::TrivialStatement& value )
@@ -430,7 +446,6 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::TrivialStatement& value )
 }
 void CasmIRToCselIRPass::visit_epilog( libcasm_ir::TrivialStatement& value )
 {
-    reference[&value ] = 0;
 }
 
 void CasmIRToCselIRPass::visit_prolog( libcasm_ir::BranchStatement& value )
@@ -492,6 +507,31 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::BranchStatement& value )
         stmt->addScope( (libcsel_ir::Scope*)scope );
     }
 
+    reference[&value ] = 0;
+}
+
+void CasmIRToCselIRPass::visit_prolog( libcasm_ir::LocalInstruction& value )
+{
+    printf( ">>>>>>>>>>>>>>>>>>>>>>>>> %p\n", &value );
+    
+    libcsel_ir::Structure* local_type = libcasm_rt::Type::create(
+        static_cast< libcasm_ir::Value& >( value ) );
+
+    libcsel_ir::AllocInstruction* local
+        = new libcsel_ir::AllocInstruction( local_type->getType() );
+    assert( local );
+
+    libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
+    assert( parent );
+    libcsel_ir::Statement* stmt = (libcsel_ir::Statement*)reference[ parent ];
+    assert( stmt );
+    stmt->add( local );
+    
+    reference[&value ] = local;
+}
+
+void CasmIRToCselIRPass::visit_epilog( libcasm_ir::LocalInstruction& value )
+{
     reference[&value ] = 0;
 }
 
@@ -644,38 +684,38 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::PrintInstruction& value )
         libcsel_ir::StreamInstruction::OUTPUT );
     assert( obj );
 
-    for( libcasm_ir::Value* v : value.getValues() )
-    {
-        libcsel_ir::Value* e = reference[ v ];
-        // libcsel_ir::Structure* s = libcasm_rt::Type::create( *v );
+    // for( libcasm_ir::Value* v : value.getValues() )
+    // {
+    //     libcsel_ir::Value* e = reference[ v ];
+    //     libcsel_ir::Structure* s = libcasm_rt::Type::create( *v );
 
-        if( libcasm_ir::Value::isa< libcasm_ir::StringConstant >( v ) )
-        {
-            assert(
-                libcsel_ir::Value::isa< libcsel_ir::StructureConstant >( e ) );
-            libcsel_ir::StructureConstant* c
-                = (libcsel_ir::StructureConstant*)e;
+    //     // if( libcasm_ir::Value::isa< libcasm_ir::StringConstant >( v ) )
+    //     // {
+    //     //     assert(
+    //     //         libcsel_ir::Value::isa< libcsel_ir::StructureConstant >( e ) );
+    //     //     libcsel_ir::StructureConstant* c
+    //     //         = (libcsel_ir::StructureConstant*)e;
 
-            assert( libcsel_ir::Value::isa< libcsel_ir::BitConstant >(
-                c->getElements()[ 1 ] ) );
-            libcsel_ir::BitConstant* def
-                = (libcsel_ir::BitConstant*)c->getElements()[ 1 ];
-            if( def->getValue()[ 0 ] == 0 )
-            {
-                e = undef;
-            }
-            else
-            {
-                e = c->getElements()[ 0 ];
-            }
-        }
-        else
-        {
-            assert( !" unsupported/unimplemented print instr argument! " );
-        }
+    //     //     assert( libcsel_ir::Value::isa< libcsel_ir::BitConstant >(
+    //     //         c->getElements()[ 1 ] ) );
+    //     //     libcsel_ir::BitConstant* def
+    //     //         = (libcsel_ir::BitConstant*)c->getElements()[ 1 ];
+    //     //     if( def->getValue()[ 0 ] == 0 )
+    //     //     {
+    //     //         e = undef;
+    //     //     }
+    //     //     else
+    //     //     {
+    //     //         e = c->getElements()[ 0 ];
+    //     //     }
+    //     // }
+    //     // else
+    //     // {
+    //     //     assert( !" unsupported/unimplemented print instr argument! " );
+    //     // }
 
-        obj->add( e );
-    }
+    //     obj->add( e );
+    // }
     obj->add( &libcsel_ir::StringConstant::LF );
 
     libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();

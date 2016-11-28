@@ -58,7 +58,7 @@ void Backend::emit( FILE* f, Value* ir )
         case Value::CALL_INSTRUCTION:
             emit( f, ( (CallInstruction*)ir ) );
             break;
-        case Value::LET_INSTRUCTION:
+        case Value::LOCAL_INSTRUCTION:
             emit( f, ( (LetInstruction*)ir ) );
             break;
 
