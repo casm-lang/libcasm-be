@@ -390,8 +390,9 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::ParallelBlock& value )
         libcasm_ir::Value* parent = value.getParent();
         assert( parent );
         assert( reference[ parent ] );
-        
-        libcsel_ir::Scope* upper_scope = static_cast< libcsel_ir::Scope* >( reference[ parent ] );
+
+        libcsel_ir::Scope* upper_scope
+            = static_cast< libcsel_ir::Scope* >( reference[ parent ] );
         upper_scope->add( scope );
         scope->setParent( upper_scope );
     }
@@ -421,12 +422,13 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::SequentialBlock& value )
         libcasm_ir::Value* parent = value.getParent();
         assert( parent );
         assert( reference[ parent ] );
-        
-        libcsel_ir::Scope* upper_scope = static_cast< libcsel_ir::Scope* >( reference[ parent ] );
+
+        libcsel_ir::Scope* upper_scope
+            = static_cast< libcsel_ir::Scope* >( reference[ parent ] );
         upper_scope->add( scope );
         scope->setParent( upper_scope );
     }
-    
+
     reference[&value ] = scope;
 }
 void CasmIRToCselIRPass::visit_epilog( libcasm_ir::SequentialBlock& value )
@@ -513,7 +515,7 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::BranchStatement& value )
 void CasmIRToCselIRPass::visit_prolog( libcasm_ir::LocalInstruction& value )
 {
     printf( ">>>>>>>>>>>>>>>>>>>>>>>>> %p\n", &value );
-    
+
     libcsel_ir::Structure* local_type = libcasm_rt::Type::create(
         static_cast< libcasm_ir::Value& >( value ) );
 
@@ -526,7 +528,7 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::LocalInstruction& value )
     libcsel_ir::Statement* stmt = (libcsel_ir::Statement*)reference[ parent ];
     assert( stmt );
     stmt->add( local );
-    
+
     reference[&value ] = local;
 }
 
@@ -692,7 +694,8 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::PrintInstruction& value )
     //     // if( libcasm_ir::Value::isa< libcasm_ir::StringConstant >( v ) )
     //     // {
     //     //     assert(
-    //     //         libcsel_ir::Value::isa< libcsel_ir::StructureConstant >( e ) );
+    //     //         libcsel_ir::Value::isa< libcsel_ir::StructureConstant >( e
+    //     ) );
     //     //     libcsel_ir::StructureConstant* c
     //     //         = (libcsel_ir::StructureConstant*)e;
 
@@ -711,7 +714,8 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::PrintInstruction& value )
     //     // }
     //     // else
     //     // {
-    //     //     assert( !" unsupported/unimplemented print instr argument! " );
+    //     //     assert( !" unsupported/unimplemented print instr argument! "
+    //     );
     //     // }
 
     //     obj->add( e );

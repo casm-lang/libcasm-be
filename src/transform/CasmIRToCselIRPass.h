@@ -25,7 +25,6 @@
 #define _LIB_CASMBE_CASMIRTOCSELIRPASS_H_
 
 #include "libcasm-be.all.h"
-#include "libcasm-fe.all.h"
 #include "libcasm-ir.all.h"
 #include "libcasm-rt.h"
 #include "libcsel-ir.all.h"
@@ -50,7 +49,7 @@ namespace libcasm_be
         static char id;
 
         bool run( libpass::PassResult& pr ) override final;
-        
+
         libcsel_ir::Module* getModule( void ) const;
 
         LIB_CASMIR_VISITOR_INTERFACE;
