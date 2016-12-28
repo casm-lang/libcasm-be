@@ -148,7 +148,7 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Specification& value )
     libcasm_ir::Value* agent_ptr = value.get< libcasm_ir::Agent >()[ 0 ];
     assert( libcasm_ir::Value::isa< libcasm_ir::Agent >( agent_ptr ) );
     libcasm_ir::Agent* agent = (libcasm_ir::Agent*)agent_ptr;
-    libcasm_ir::Rule* init_rule = agent->getInitRulePointer()->getValue();
+    libcasm_ir::Rule* init_rule = agent->getInitRuleReference()->getValue();
     libcsel_ir::Value* init_rule_func_val = reference[ init_rule ];
     assert( init_rule_func_val );
     assert(
@@ -327,9 +327,11 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::Function& value )
         return;
     }
 
-    const std::vector< libcasm_ir::Type* >& params
-        = value.getType()->getParameters();
-    if( params.size() != 0 )
+    assert( value.getType()->getID() == libcasm_ir::Type::RELATION );
+    libcasm_ir::RelationType* ftype
+        = static_cast< libcasm_ir::RelationType* >( value.getType() );
+
+    if( ftype->getArguments().size() != 0 )
     {
         assert( !" unimplemented transformation for n-ary functions!" );
     }
@@ -883,7 +885,8 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::StringConstant& value )
 {
 }
 
-void CasmIRToCselIRPass::visit_prolog( libcasm_ir::RulePointerConstant& value )
+void CasmIRToCselIRPass::visit_prolog(
+    libcasm_ir::RuleReferenceConstant& value )
 {
     libcsel_ir::Value* def = value.isDefined()
                                  ? &libcsel_ir::BitConstant::TRUE
@@ -916,7 +919,8 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::RulePointerConstant& value )
     module->add( const_rule );
     reference[&value ] = const_rule;
 }
-void CasmIRToCselIRPass::visit_epilog( libcasm_ir::RulePointerConstant& value )
+void CasmIRToCselIRPass::visit_epilog(
+    libcasm_ir::RuleReferenceConstant& value )
 {
 }
 
