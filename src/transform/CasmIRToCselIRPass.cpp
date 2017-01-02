@@ -539,6 +539,30 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::LocalInstruction& value )
     reference[&value ] = 0;
 }
 
+void CasmIRToCselIRPass::visit_prolog( libcasm_ir::SkipInstruction& value )
+{
+    assert( !" not implemented !!! " );
+}
+void CasmIRToCselIRPass::visit_epilog( libcasm_ir::SkipInstruction& value )
+{
+}
+
+void CasmIRToCselIRPass::visit_prolog( libcasm_ir::ForkInstruction& value )
+{
+    assert( !" not implemented !!! " );
+}
+void CasmIRToCselIRPass::visit_epilog( libcasm_ir::ForkInstruction& value )
+{
+}
+
+void CasmIRToCselIRPass::visit_prolog( libcasm_ir::MergeInstruction& value )
+{
+    assert( !" not implemented !!! " );
+}
+void CasmIRToCselIRPass::visit_epilog( libcasm_ir::MergeInstruction& value )
+{
+}
+
 void CasmIRToCselIRPass::visit_prolog( libcasm_ir::LocationInstruction& value )
 {
     assert( value.getValues().size() >= 1 );
