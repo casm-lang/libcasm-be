@@ -549,6 +549,22 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::LocalInstruction& value )
     reference[&value ] = 0;
 }
 
+void CasmIRToCselIRPass::visit_prolog( libcasm_ir::AssertInstruction& value )
+{
+    assert( !" TODO " );
+}
+void CasmIRToCselIRPass::visit_epilog( libcasm_ir::AssertInstruction& value )
+{
+}
+
+void CasmIRToCselIRPass::visit_prolog( libcasm_ir::SelectInstruction& value )
+{
+    assert( !" TODO " );
+}
+void CasmIRToCselIRPass::visit_epilog( libcasm_ir::SelectInstruction& value )
+{
+}
+
 void CasmIRToCselIRPass::visit_prolog( libcasm_ir::SkipInstruction& value )
 {
     assert( !" not implemented !!! " );
@@ -881,49 +897,15 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::EquInstruction& value )
 {
 }
 
-// CONSTANTS
+//
+// Constants
+//
 
-void CasmIRToCselIRPass::visit_prolog( libcasm_ir::IntegerConstant& value )
+void CasmIRToCselIRPass::visit_prolog( libcasm_ir::AgentConstant& value )
 {
-    libcsel_ir::Value* val = libcsel_ir::BitConstant::create( value.getValue(),
-        libcasm_rt::Integer::create()->get( 0 )->getType()->getBitsize() );
-    libcsel_ir::Value* def = libcsel_ir::BitConstant::create( value.isDefined(),
-        libcasm_rt::Integer::create()->get( 1 )->getType()->getBitsize() );
-    assert( val );
-    assert( def );
-
-    libcsel_ir::Value* const_int = libcsel_ir::StructureConstant::create(
-        libcasm_rt::Integer::create(), { val, def } );
-
-    module->add( const_int );
-    reference[&value ] = const_int;
+    // TODO: FIXME: PPA: this is obsolete for now!!!
 }
-void CasmIRToCselIRPass::visit_epilog( libcasm_ir::IntegerConstant& value )
-{
-}
-
-void CasmIRToCselIRPass::visit_prolog( libcasm_ir::StringConstant& value )
-{
-    printf( "%s:%i: '%s'\n", __FILE__, __LINE__, value.getValue() );
-
-    libcsel_ir::Structure* type = libcasm_rt::String::create( value );
-
-    module->add( type );
-
-    libcsel_ir::Value* val
-        = libcsel_ir::StringConstant::create( value.getValue() );
-    libcsel_ir::Value* def = libcsel_ir::BitConstant::create(
-        value.isDefined(), type->get( 1 )->getType()->getBitsize() );
-    assert( val );
-    assert( def );
-
-    libcsel_ir::Value* const_string
-        = libcsel_ir::StructureConstant::create( type, { val, def } );
-
-    module->add( const_string );
-    reference[&value ] = const_string;
-}
-void CasmIRToCselIRPass::visit_epilog( libcasm_ir::StringConstant& value )
+void CasmIRToCselIRPass::visit_epilog( libcasm_ir::AgentConstant& value )
 {
 }
 
@@ -966,11 +948,55 @@ void CasmIRToCselIRPass::visit_epilog(
 {
 }
 
-void CasmIRToCselIRPass::visit_prolog( libcasm_ir::AgentConstant& value )
+void CasmIRToCselIRPass::visit_prolog( libcasm_ir::BooleanConstant& value )
 {
-    // TODO: FIXME: PPA: this is obsolete for now!!!
+    assert( !" TODO " );
 }
-void CasmIRToCselIRPass::visit_epilog( libcasm_ir::AgentConstant& value )
+void CasmIRToCselIRPass::visit_epilog( libcasm_ir::BooleanConstant& value )
+{
+}
+
+void CasmIRToCselIRPass::visit_prolog( libcasm_ir::IntegerConstant& value )
+{
+    libcsel_ir::Value* val = libcsel_ir::BitConstant::create( value.getValue(),
+        libcasm_rt::Integer::create()->get( 0 )->getType()->getBitsize() );
+    libcsel_ir::Value* def = libcsel_ir::BitConstant::create( value.isDefined(),
+        libcasm_rt::Integer::create()->get( 1 )->getType()->getBitsize() );
+    assert( val );
+    assert( def );
+
+    libcsel_ir::Value* const_int = libcsel_ir::StructureConstant::create(
+        libcasm_rt::Integer::create(), { val, def } );
+
+    module->add( const_int );
+    reference[&value ] = const_int;
+}
+void CasmIRToCselIRPass::visit_epilog( libcasm_ir::IntegerConstant& value )
+{
+}
+
+void CasmIRToCselIRPass::visit_prolog( libcasm_ir::StringConstant& value )
+{
+    printf( "%s:%i: '%s'\n", __FILE__, __LINE__, value.getValue() );
+
+    libcsel_ir::Structure* type = libcasm_rt::String::create( value );
+
+    module->add( type );
+
+    libcsel_ir::Value* val
+        = libcsel_ir::StringConstant::create( value.getValue() );
+    libcsel_ir::Value* def = libcsel_ir::BitConstant::create(
+        value.isDefined(), type->get( 1 )->getType()->getBitsize() );
+    assert( val );
+    assert( def );
+
+    libcsel_ir::Value* const_string
+        = libcsel_ir::StructureConstant::create( type, { val, def } );
+
+    module->add( const_string );
+    reference[&value ] = const_string;
+}
+void CasmIRToCselIRPass::visit_epilog( libcasm_ir::StringConstant& value )
 {
 }
 
