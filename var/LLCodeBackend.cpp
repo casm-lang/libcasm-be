@@ -41,7 +41,7 @@ const char* LLCodeBackend::getRegister( libcasm_ir::Value* value, u1 let_flag )
     }
 
     std::string cnt = std::to_string( register_count );
-    if( libcasm_ir::Value::isa< libcasm_ir::ConstantValue >( value )
+    if( libcasm_ir::Value::isa< libcasm_ir::Constant >( value )
         and not libcasm_ir::Value::isa< libcasm_ir::Identifier >( value ) )
     {
         register_cache[ value ] = std::string( "@.c" + cnt );

@@ -72,7 +72,7 @@ bool CasmIRToLLCodePass::run( libpass::PassResult& pr )
 
     for( auto value : symbols[ ".constant" ] )
     {
-        // if( Value::isa< ConstantValue >( value ) )
+        // if( Value::isa< Constant >( value ) )
         // {
         // 	emit( output, value) ;
         // }

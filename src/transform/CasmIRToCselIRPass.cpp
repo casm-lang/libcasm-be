@@ -148,7 +148,9 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Specification& value )
     libcasm_ir::Value* agent_ptr = value.get< libcasm_ir::Agent >()[ 0 ];
     assert( libcasm_ir::Value::isa< libcasm_ir::Agent >( agent_ptr ) );
     libcasm_ir::Agent* agent = (libcasm_ir::Agent*)agent_ptr;
-    libcasm_ir::Rule* init_rule = agent->getInitRuleReference()->getValue();
+
+    libcasm_ir::Rule* init_rule = agent->getInitRule();
+
     libcsel_ir::Value* init_rule_func_val = reference[ init_rule ];
     assert( init_rule_func_val );
     assert(
@@ -302,6 +304,14 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::Agent& value )
     // execution behavior!
 }
 void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Agent& value )
+{
+}
+
+void CasmIRToCselIRPass::visit_prolog( libcasm_ir::Builtin& value )
+{
+    assert( !" TODO " );
+}
+void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Builtin& value )
 {
 }
 
@@ -680,7 +690,7 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::UpdateInstruction& value )
 
     libcasm_ir::Value* val = value.getValue( 1 );
     assert( libcasm_ir::Value::isa< libcasm_ir::Instruction >( val )
-            or libcasm_ir::Value::isa< libcasm_ir::ConstantValue >( val ) );
+            or libcasm_ir::Value::isa< libcasm_ir::Constant >( val ) );
     libcsel_ir::Value* update_val = reference[ val ];
     assert( update_val );
 
@@ -696,6 +706,14 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::UpdateInstruction& value )
     reference[&value ] = call;
 }
 void CasmIRToCselIRPass::visit_epilog( libcasm_ir::UpdateInstruction& value )
+{
+}
+
+void CasmIRToCselIRPass::visit_prolog( libcasm_ir::CallInstruction& value )
+{
+    assert( !" TODO " );
+}
+void CasmIRToCselIRPass::visit_epilog( libcasm_ir::CallInstruction& value )
 {
 }
 
