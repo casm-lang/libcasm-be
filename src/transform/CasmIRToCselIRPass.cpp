@@ -91,8 +91,10 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Specification& value )
 
     libcsel_ir::Reference* program = 0;
 
-    for( auto function : value.get< libcasm_ir::Function >() )
+    for( auto e : value.get< libcasm_ir::Function >() )
     {
+        libcasm_ir::Value* function = e.second;
+        
         assert( function and libcasm_ir::Value::isa< libcasm_ir::Function >(
                                  function ) );
         libcasm_ir::Function* f = (libcasm_ir::Function*)function;
@@ -145,7 +147,8 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Specification& value )
     //              so that it is a direct property of an Agent!!!
     assert( value.has< libcasm_ir::Agent >() );
     assert( value.get< libcasm_ir::Agent >().size() == 1 );
-    libcasm_ir::Value* agent_ptr = value.get< libcasm_ir::Agent >()[ 0 ];
+    
+    libcasm_ir::Value* agent_ptr = value.get< libcasm_ir::Agent >().begin()->second;
     assert( libcasm_ir::Value::isa< libcasm_ir::Agent >( agent_ptr ) );
     libcasm_ir::Agent* agent = (libcasm_ir::Agent*)agent_ptr;
 
@@ -210,8 +213,10 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Specification& value )
 
     execute->add( run_rule );
 
-    for( auto function : value.get< libcasm_ir::Function >() )
+    for( auto e : value.get< libcasm_ir::Function >() )
     {
+        libcasm_ir::Value* function = e.second;
+        
         assert( function and libcasm_ir::Value::isa< libcasm_ir::Function >(
                                  function ) );
         libcasm_ir::Function* f = (libcasm_ir::Function*)function;
