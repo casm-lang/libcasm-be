@@ -94,7 +94,7 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Specification& value )
     for( auto e : value.get< libcasm_ir::Function >() )
     {
         libcasm_ir::Value* function = e.second;
-        
+
         assert( function and libcasm_ir::Value::isa< libcasm_ir::Function >(
                                  function ) );
         libcasm_ir::Function* f = (libcasm_ir::Function*)function;
@@ -147,8 +147,9 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Specification& value )
     //              so that it is a direct property of an Agent!!!
     assert( value.has< libcasm_ir::Agent >() );
     assert( value.get< libcasm_ir::Agent >().size() == 1 );
-    
-    libcasm_ir::Value* agent_ptr = value.get< libcasm_ir::Agent >().begin()->second;
+
+    libcasm_ir::Value* agent_ptr
+        = value.get< libcasm_ir::Agent >().begin()->second;
     assert( libcasm_ir::Value::isa< libcasm_ir::Agent >( agent_ptr ) );
     libcasm_ir::Agent* agent = (libcasm_ir::Agent*)agent_ptr;
 
@@ -216,7 +217,7 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Specification& value )
     for( auto e : value.get< libcasm_ir::Function >() )
     {
         libcasm_ir::Value* function = e.second;
-        
+
         assert( function and libcasm_ir::Value::isa< libcasm_ir::Function >(
                                  function ) );
         libcasm_ir::Function* f = (libcasm_ir::Function*)function;
@@ -355,6 +356,17 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::Function& value )
     // );
 }
 void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Function& value )
+{
+}
+
+void CasmIRToCselIRPass::visit_prolog( libcasm_ir::Derived& value )
+{
+    assert( !" TODO! " );
+}
+void CasmIRToCselIRPass::visit_interlog( libcasm_ir::Derived& value )
+{
+}
+void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Derived& value )
 {
 }
 
@@ -831,6 +843,33 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::AddInstruction& value )
 {
 }
 
+void CasmIRToCselIRPass::visit_prolog( libcasm_ir::SubInstruction& value )
+{
+    DUMP_PREFIX;
+    DUMP_POSTFIX;
+}
+void CasmIRToCselIRPass::visit_epilog( libcasm_ir::SubInstruction& value )
+{
+}
+
+void CasmIRToCselIRPass::visit_prolog( libcasm_ir::MulInstruction& value )
+{
+    DUMP_PREFIX;
+    DUMP_POSTFIX;
+}
+void CasmIRToCselIRPass::visit_epilog( libcasm_ir::MulInstruction& value )
+{
+}
+
+void CasmIRToCselIRPass::visit_prolog( libcasm_ir::ModInstruction& value )
+{
+    DUMP_PREFIX;
+    DUMP_POSTFIX;
+}
+void CasmIRToCselIRPass::visit_epilog( libcasm_ir::ModInstruction& value )
+{
+}
+
 void CasmIRToCselIRPass::visit_prolog( libcasm_ir::DivInstruction& value )
 {
     libcsel_ir::CallableUnit* obj
@@ -871,6 +910,24 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::AndInstruction& value )
 {
 }
 
+void CasmIRToCselIRPass::visit_prolog( libcasm_ir::XorInstruction& value )
+{
+    DUMP_PREFIX;
+    DUMP_POSTFIX;
+}
+void CasmIRToCselIRPass::visit_epilog( libcasm_ir::XorInstruction& value )
+{
+}
+
+void CasmIRToCselIRPass::visit_prolog( libcasm_ir::OrInstruction& value )
+{
+    DUMP_PREFIX;
+    DUMP_POSTFIX;
+}
+void CasmIRToCselIRPass::visit_epilog( libcasm_ir::OrInstruction& value )
+{
+}
+
 void CasmIRToCselIRPass::visit_prolog( libcasm_ir::EquInstruction& value )
 {
     libcsel_ir::CallableUnit* obj
@@ -899,6 +956,24 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::EquInstruction& value )
     stmt->add( call );
 }
 void CasmIRToCselIRPass::visit_epilog( libcasm_ir::EquInstruction& value )
+{
+}
+
+void CasmIRToCselIRPass::visit_prolog( libcasm_ir::NeqInstruction& value )
+{
+    DUMP_PREFIX;
+    DUMP_POSTFIX;
+}
+void CasmIRToCselIRPass::visit_epilog( libcasm_ir::NeqInstruction& value )
+{
+}
+
+void CasmIRToCselIRPass::visit_prolog( libcasm_ir::LthInstruction& value )
+{
+    DUMP_PREFIX;
+    DUMP_POSTFIX;
+}
+void CasmIRToCselIRPass::visit_epilog( libcasm_ir::LthInstruction& value )
 {
 }
 
@@ -977,6 +1052,14 @@ void CasmIRToCselIRPass::visit_prolog( libcasm_ir::IntegerConstant& value )
     reference[&value ] = const_int;
 }
 void CasmIRToCselIRPass::visit_epilog( libcasm_ir::IntegerConstant& value )
+{
+}
+
+void CasmIRToCselIRPass::visit_prolog( libcasm_ir::BitConstant& value )
+{
+    assert( !" TODO " );
+}
+void CasmIRToCselIRPass::visit_epilog( libcasm_ir::BitConstant& value )
 {
 }
 
