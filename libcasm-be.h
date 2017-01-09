@@ -27,11 +27,10 @@
 // #include "src/Backend.h"
 // #include "src/LLCodeBackend.h"
 
+#include "src/transform/CasmIRToCselIRPass.h"
+
 namespace libcasm_be
 {
-    class CasmBE
-    {
-    };
 }
 
 #endif // _LIB_CASM_BE_H_

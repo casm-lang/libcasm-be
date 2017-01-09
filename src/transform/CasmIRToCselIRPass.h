@@ -27,7 +27,7 @@
 #include "libpass.h"
 
 #include "libcasm-ir.h"
-#include "libcsel-ir.all.h"
+#include "libcsel-ir.h"
 
 /**
    @brief    TODO

@@ -21,16 +21,17 @@
 //  along with libcasm-be. If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef _LIB_CASMBE_ALL_H_
-#define _LIB_CASMBE_ALL_H_
+#ifndef _LIB_CASMBE_CASMBE_H_
+#define _LIB_CASMBE_CASMBE_H_
 
-#include "libcasm-be.h"
+namespace libcasm_be
+{
+    class CasmBE
+    {
+    };
+}
 
-#include "src/transform/CasmIRToCselIRPass.h"
-
-//#include "src/transform/CasmIRToLLCodePass.h"
-
-#endif // _LIB_CASMBE_ALL_H_
+#endif // _LIB_CASMBE_CASMBE_H_
 
 //
 //  Local variables:
