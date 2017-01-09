@@ -24,11 +24,10 @@
 #ifndef _LIB_CASMBE_CASMIRTOCSELIRPASS_H_
 #define _LIB_CASMBE_CASMIRTOCSELIRPASS_H_
 
-#include "libcasm-be.all.h"
-#include "libcasm-ir.all.h"
-#include "libcasm-rt.h"
-#include "libcsel-ir.all.h"
 #include "libpass.h"
+
+#include "libcasm-ir.h"
+#include "libcsel-ir.all.h"
 
 /**
    @brief    TODO

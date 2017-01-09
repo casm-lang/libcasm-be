@@ -23,6 +23,8 @@
 
 #include "CasmIRToCselIRPass.h"
 
+#include "libcasm-rt.h"
+
 using namespace libcasm_be;
 
 char CasmIRToCselIRPass::id = 0;
@@ -373,7 +375,7 @@ void CasmIRToCselIRPass::visit_epilog( libcasm_ir::Derived& value )
 void CasmIRToCselIRPass::visit_prolog( libcasm_ir::Rule& value )
 {
     const char* name = libstdhl::Allocator::string(
-        "casm_rule_" + string( value.getName() ) );
+        "casm_rule_" + std::string( value.getName() ) );
 
     if( reference.count( &value ) > 0 )
     {
