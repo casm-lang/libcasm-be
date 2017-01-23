@@ -37,7 +37,8 @@
 
 namespace libcasm_be
 {
-    class CasmIRToCselIRPass : public libpass::Pass, public libcasm_ir::Visitor
+    class CasmIRToCselIRPass final : public libpass::Pass,
+                                     public libcasm_ir::Visitor
     {
       private:
         libcsel_ir::Module* module;
@@ -47,7 +48,7 @@ namespace libcasm_be
       public:
         static char id;
 
-        bool run( libpass::PassResult& pr ) override final;
+        bool run( libpass::PassResult& pr ) override;
 
         libcsel_ir::Module* getModule( void ) const;
 
