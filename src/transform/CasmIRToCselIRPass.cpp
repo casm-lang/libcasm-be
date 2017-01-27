@@ -203,7 +203,7 @@ void CasmIRToCselIRPass::visit_epilog(
     //     libcsel_ir::Type::getBit( pd->getType()->getSize() ), 0 );
     // assert( c );
     // module->add( c );
-    // libcsel_ir::Value* check = new libcsel_ir::NeqUnsignedInstruction( lpd, c
+    // libcsel_ir::Value* check = new libcsel_ir::NeqInstruction( lpd, c
     // );
     // loop->add( check );
 
@@ -258,7 +258,7 @@ void CasmIRToCselIRPass::visit_epilog(
     //         );
     //     libcsel_ir::Instruction* l_bra
     //         = new libcsel_ir::LoadInstruction( u_bra );
-    //     branch->add( new libcsel_ir::NeqUnsignedInstruction( l_bra, c ) );
+    //     branch->add( new libcsel_ir::NeqInstruction( l_bra, c ) );
 
     //     libcsel_ir::SequentialScope* branch_apply
     //         = new libcsel_ir::SequentialScope();
@@ -579,7 +579,7 @@ void CasmIRToCselIRPass::visit_interlog(
     libcsel_ir::Instruction* ld = new libcsel_ir::LoadInstruction( rd );
 
     libcsel_ir::Instruction* rt
-        = new libcsel_ir::EquUnsignedInstruction( lv, ld );
+        = new libcsel_ir::EquInstruction( lv, ld );
 
     stmt->add( rt );
 }
