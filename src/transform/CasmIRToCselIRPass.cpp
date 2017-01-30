@@ -39,7 +39,7 @@ bool CasmIRToCselIRPass::run( libpass::PassResult& pr )
 {
     libcasm_ir::Specification* value
         = (libcasm_ir::Specification*)
-              pr.getResult< libcasm_ir::CasmIRDumpPass >();
+              pr.result< libcasm_ir::CasmIRDumpPass >();
     assert( value );
 
     module = 0;
@@ -59,13 +59,13 @@ libcsel_ir::Module* CasmIRToCselIRPass::getModule( void ) const
 }
 
 #define DUMP_PREFIX                                                            \
-    printf( "%-14s: %p, %s", __FUNCTION__, &value, value.getName() )
+    printf( "%-14s: %p, %s", __FUNCTION__, &value, value.name() )
 #define DUMP_POSTFIX printf( " [TODO]\n" );
 
 void CasmIRToCselIRPass::visit_prolog(
     libcasm_ir::Specification& value, libcasm_ir::Context& )
 {
-    module = new libcsel_ir::Module( value.getName() );
+    module = new libcsel_ir::Module( value.name() );
 
     assert( !" PPA: TODO!!! " );
 
@@ -93,7 +93,7 @@ void CasmIRToCselIRPass::visit_epilog(
     //     = libcsel_ir::Type::getRelation( libcsel_ir::Type::getBit( 1 ), {} );
 
     // libcsel_ir::Function* kernel
-    //     = new libcsel_ir::Function( value.getName(), kernel_ty );
+    //     = new libcsel_ir::Function( value.name(), kernel_ty );
     // assert( kernel );
     // module->add( kernel );
 
@@ -377,7 +377,7 @@ void CasmIRToCselIRPass::visit_prolog(
     // // TODO: FIXME: PPA: the following line should be removed in the near
     // future
     // //                   after a clean 'self' and Agent implementation!
-    // if( strcmp( value.getName(), "program" ) == 0 )
+    // if( strcmp( value.name(), "program" ) == 0 )
     // {
     //     return;
     // }
@@ -392,7 +392,7 @@ void CasmIRToCselIRPass::visit_prolog(
     // }
 
     // // printf( "%s:%i: '%s'\n", __FILE__, __LINE__,
-    // value.getType()->getName()
+    // value.getType()->name()
     // // );
 }
 void CasmIRToCselIRPass::visit_epilog(
@@ -420,7 +420,7 @@ void CasmIRToCselIRPass::visit_prolog(
     assert( !" PPA: TODO!!! " );
 
     const char* name = libstdhl::Allocator::string(
-        "casm_rule_" + std::string( value.getName() ) );
+        "casm_rule_" + std::string( value.name() ) );
 
     if( reference.count( &value ) > 0 )
     {
@@ -430,7 +430,7 @@ void CasmIRToCselIRPass::visit_prolog(
     }
 
     libcsel_ir::Function* obj = new libcsel_ir::Function(
-        name, &libcasm_rt::Type::get( *value.getType() ) );
+        name, &libcasm_rt::Type::get( value.type() ) );
     assert( obj );
     module->add( obj );
 
@@ -456,10 +456,10 @@ void CasmIRToCselIRPass::visit_prolog(
     libcsel_ir::ParallelScope* scope = new libcsel_ir::ParallelScope();
     assert( scope );
 
-    libcasm_ir::ExecutionSemanticsBlock* parent_scope = value.getScope();
+    libcasm_ir::ExecutionSemanticsBlock* parent_scope = value.scope();
     if( !parent_scope )
     {
-        libcasm_ir::Rule* rule = value.getBound();
+        libcasm_ir::Rule* rule = value.bound();
 
         libcsel_ir::Function* comp
             = (libcsel_ir::Function*)( reference[ rule ] );
@@ -467,7 +467,7 @@ void CasmIRToCselIRPass::visit_prolog(
     }
     else
     {
-        libcasm_ir::Value* parent = value.getParent();
+        libcasm_ir::Value* parent = value.parent();
         assert( parent );
         assert( reference[ parent ] );
 
@@ -490,10 +490,10 @@ void CasmIRToCselIRPass::visit_prolog(
     libcsel_ir::SequentialScope* scope = new libcsel_ir::SequentialScope();
     assert( scope );
 
-    libcasm_ir::ExecutionSemanticsBlock* parent_scope = value.getScope();
+    libcasm_ir::ExecutionSemanticsBlock* parent_scope = value.scope();
     if( !parent_scope )
     {
-        libcasm_ir::Rule* rule = value.getBound();
+        libcasm_ir::Rule* rule = value.bound();
 
         libcsel_ir::Function* comp
             = (libcsel_ir::Function*)( reference[ rule ] );
@@ -501,7 +501,7 @@ void CasmIRToCselIRPass::visit_prolog(
     }
     else
     {
-        libcasm_ir::Value* parent = value.getParent();
+        libcasm_ir::Value* parent = value.parent();
         assert( parent );
         assert( reference[ parent ] );
 
@@ -521,7 +521,7 @@ void CasmIRToCselIRPass::visit_epilog(
 void CasmIRToCselIRPass::visit_prolog(
     libcasm_ir::TrivialStatement& value, libcasm_ir::Context& )
 {
-    libcasm_ir::ExecutionSemanticsBlock* parent = value.getScope();
+    libcasm_ir::ExecutionSemanticsBlock* parent = value.scope();
     assert( parent );
 
     libcsel_ir::TrivialStatement* stmt
@@ -538,7 +538,7 @@ void CasmIRToCselIRPass::visit_epilog(
 void CasmIRToCselIRPass::visit_prolog(
     libcasm_ir::BranchStatement& value, libcasm_ir::Context& )
 {
-    libcasm_ir::ExecutionSemanticsBlock* parent = value.getScope();
+    libcasm_ir::ExecutionSemanticsBlock* parent = value.scope();
     assert( parent );
 
     libcsel_ir::BranchStatement* stmt
@@ -589,7 +589,7 @@ void CasmIRToCselIRPass::visit_epilog(
     libcsel_ir::BranchStatement* stmt
         = (libcsel_ir::BranchStatement*)reference[&value ];
 
-    for( auto b : value.getBlocks() )
+    for( auto b : value.blocks() )
     {
         libcsel_ir::Value* scope = reference[ b ];
         assert( scope && libcsel_ir::isa< libcsel_ir::Scope >( scope ) );
@@ -682,9 +682,9 @@ void CasmIRToCselIRPass::visit_epilog(
 void CasmIRToCselIRPass::visit_prolog(
     libcasm_ir::LocationInstruction& value, libcasm_ir::Context& )
 {
-    assert( value.getValues().size() >= 1 );
+    assert( value.values().size() >= 1 );
 
-    libcasm_ir::Value* src = value.getValue( 0 );
+    libcasm_ir::Value* src = value.value( 0 );
     assert( libcasm_ir::isa< libcasm_ir::Function >( src ) );
 
     libcsel_ir::Value* location_src = reference[ src ];
@@ -705,7 +705,7 @@ void CasmIRToCselIRPass::visit_prolog(
     assert( alloc );
     call->add( alloc );
 
-    libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
+    libcasm_ir::Value* parent = (libcasm_ir::Value*)value.statement();
     assert( parent );
     libcsel_ir::Statement* stmt = (libcsel_ir::Statement*)reference[ parent ];
     assert( stmt );
@@ -893,7 +893,7 @@ void CasmIRToCselIRPass::visit_prolog(
     // PPA: TODO: HERE!!!!
     // obj->add( &libcsel_ir::StringConstant::LF );
 
-    libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
+    libcasm_ir::Value* parent = (libcasm_ir::Value*)value.statement();
     assert( parent );
     libcsel_ir::Statement* stmt = (libcsel_ir::Statement*)reference[ parent ];
     assert( stmt );
@@ -915,11 +915,11 @@ void CasmIRToCselIRPass::visit_prolog(
     libcsel_ir::CallInstruction* call = new libcsel_ir::CallInstruction( obj );
     assert( call );
 
-    libcsel_ir::Value* lhs = reference[ value.getLHS() ];
+    libcsel_ir::Value* lhs = reference[ value.lhs() ];
     assert( lhs );
     call->add( lhs );
 
-    libcsel_ir::Value* rhs = reference[ value.getRHS() ];
+    libcsel_ir::Value* rhs = reference[ value.rhs() ];
     assert( rhs );
     call->add( rhs );
 
@@ -929,7 +929,7 @@ void CasmIRToCselIRPass::visit_prolog(
     call->add( result );
     reference[&value ] = result;
 
-    libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
+    libcasm_ir::Value* parent = (libcasm_ir::Value*)value.statement();
     assert( parent );
     libcsel_ir::Statement* stmt = (libcsel_ir::Statement*)reference[ parent ];
     assert( stmt );
@@ -981,11 +981,11 @@ void CasmIRToCselIRPass::visit_prolog(
     libcsel_ir::CallInstruction* call = new libcsel_ir::CallInstruction( obj );
     assert( call );
 
-    libcsel_ir::Value* lhs = reference[ value.getLHS() ];
+    libcsel_ir::Value* lhs = reference[ value.lhs() ];
     assert( lhs );
     call->add( lhs );
 
-    libcsel_ir::Value* rhs = reference[ value.getRHS() ];
+    libcsel_ir::Value* rhs = reference[ value.rhs() ];
     assert( rhs );
     call->add( rhs );
 
@@ -995,7 +995,7 @@ void CasmIRToCselIRPass::visit_prolog(
     call->add( result );
     reference[&value ] = result;
 
-    libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
+    libcasm_ir::Value* parent = (libcasm_ir::Value*)value.statement();
     assert( parent );
     libcsel_ir::Statement* stmt = (libcsel_ir::Statement*)reference[ parent ];
     assert( stmt );
@@ -1047,11 +1047,11 @@ void CasmIRToCselIRPass::visit_prolog(
     libcsel_ir::CallInstruction* call = new libcsel_ir::CallInstruction( obj );
     assert( call );
 
-    libcsel_ir::Value* lhs = reference[ value.getLHS() ];
+    libcsel_ir::Value* lhs = reference[ value.lhs() ];
     assert( lhs );
     call->add( lhs );
 
-    libcsel_ir::Value* rhs = reference[ value.getRHS() ];
+    libcsel_ir::Value* rhs = reference[ value.rhs() ];
     assert( rhs );
     call->add( rhs );
 
@@ -1061,7 +1061,7 @@ void CasmIRToCselIRPass::visit_prolog(
     call->add( result );
     reference[&value ] = result;
 
-    libcasm_ir::Value* parent = (libcasm_ir::Value*)value.getStatement();
+    libcasm_ir::Value* parent = (libcasm_ir::Value*)value.statement();
     assert( parent );
     libcsel_ir::Statement* stmt = (libcsel_ir::Statement*)reference[ parent ];
     assert( stmt );
