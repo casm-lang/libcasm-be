@@ -43,7 +43,8 @@ namespace libcasm_be
       private:
         libcsel_ir::Module* m_module;
 
-        std::unordered_map< libcasm_ir::Value*, libcsel_ir::Value* > m_reference;
+        std::unordered_map< libcasm_ir::Value*, libcsel_ir::Value* >
+            m_reference;
 
       public:
         static char id;

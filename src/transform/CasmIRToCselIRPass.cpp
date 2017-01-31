@@ -38,8 +38,7 @@ static libpass::PassRegistration< CasmIRToCselIRPass > PASS(
 bool CasmIRToCselIRPass::run( libpass::PassResult& pr )
 {
     libcasm_ir::Specification* value
-        = (libcasm_ir::Specification*)
-              pr.result< libcasm_ir::CasmIRDumpPass >();
+        = (libcasm_ir::Specification*)pr.result< libcasm_ir::CasmIRDumpPass >();
     assert( value );
 
     m_module = 0;
@@ -558,8 +557,8 @@ void CasmIRToCselIRPass::visit_interlog(
     assert( libcsel_ir::isa< libcsel_ir::CallInstruction >( last ) );
     libcsel_ir::CallInstruction* last_call = (libcsel_ir::CallInstruction*)last;
 
-    assert( libcsel_ir::isa< libcsel_ir::CallableUnit >(
-        last_call->value( 0 ) ) );
+    assert(
+        libcsel_ir::isa< libcsel_ir::CallableUnit >( last_call->value( 0 ) ) );
     libcsel_ir::CallableUnit* last_func
         = (libcsel_ir::CallableUnit*)( last_call->value( 0 ) );
     libcsel_ir::Reference* result
@@ -578,8 +577,7 @@ void CasmIRToCselIRPass::visit_interlog(
     libcsel_ir::Instruction* lv = new libcsel_ir::LoadInstruction( rv );
     libcsel_ir::Instruction* ld = new libcsel_ir::LoadInstruction( rd );
 
-    libcsel_ir::Instruction* rt
-        = new libcsel_ir::EquInstruction( lv, ld );
+    libcsel_ir::Instruction* rt = new libcsel_ir::EquInstruction( lv, ld );
 
     stmt->add( rt );
 }
