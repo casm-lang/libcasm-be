@@ -41,16 +41,16 @@ namespace libcasm_be
                                      public libcasm_ir::Visitor
     {
       private:
-        libcsel_ir::Module* module;
+        libcsel_ir::Module* m_module;
 
-        std::unordered_map< libcasm_ir::Value*, libcsel_ir::Value* > reference;
+        std::unordered_map< libcasm_ir::Value*, libcsel_ir::Value* > m_reference;
 
       public:
         static char id;
 
         bool run( libpass::PassResult& pr ) override;
 
-        libcsel_ir::Module* getModule( void ) const;
+        libcsel_ir::Module* module( void ) const;
 
         LIB_CASMIR_VISITOR_INTERFACE;
 
