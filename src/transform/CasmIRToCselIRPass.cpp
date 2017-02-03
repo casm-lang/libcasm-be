@@ -913,11 +913,11 @@ void CasmIRToCselIRPass::visit_prolog(
     libcsel_ir::CallInstruction* call = new libcsel_ir::CallInstruction( obj );
     assert( call );
 
-    libcsel_ir::Value* lhs = m_reference[ value.lhs() ];
+    libcsel_ir::Value* lhs = m_reference[ &value.lhs() ];
     assert( lhs );
     call->add( lhs );
 
-    libcsel_ir::Value* rhs = m_reference[ value.rhs() ];
+    libcsel_ir::Value* rhs = m_reference[ &value.rhs() ];
     assert( rhs );
     call->add( rhs );
 
@@ -979,11 +979,11 @@ void CasmIRToCselIRPass::visit_prolog(
     libcsel_ir::CallInstruction* call = new libcsel_ir::CallInstruction( obj );
     assert( call );
 
-    libcsel_ir::Value* lhs = m_reference[ value.lhs() ];
+    libcsel_ir::Value* lhs = m_reference[ &value.lhs() ];
     assert( lhs );
     call->add( lhs );
 
-    libcsel_ir::Value* rhs = m_reference[ value.rhs() ];
+    libcsel_ir::Value* rhs = m_reference[ &value.rhs() ];
     assert( rhs );
     call->add( rhs );
 
@@ -1045,11 +1045,11 @@ void CasmIRToCselIRPass::visit_prolog(
     libcsel_ir::CallInstruction* call = new libcsel_ir::CallInstruction( obj );
     assert( call );
 
-    libcsel_ir::Value* lhs = m_reference[ value.lhs() ];
+    libcsel_ir::Value* lhs = m_reference[ &value.lhs() ];
     assert( lhs );
     call->add( lhs );
 
-    libcsel_ir::Value* rhs = m_reference[ value.rhs() ];
+    libcsel_ir::Value* rhs = m_reference[ &value.rhs() ];
     assert( rhs );
     call->add( rhs );
 
