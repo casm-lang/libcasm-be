@@ -908,30 +908,31 @@ void CasmIRToCselIRPass::visit_epilog(
 void CasmIRToCselIRPass::visit_prolog(
     libcasm_ir::AddInstruction& value, libcasm_ir::Context& )
 {
-    libcsel_ir::CallableUnit* obj
-        = libcasm_rt::Instruction::create( value, m_module );
+    libcsel_ir::Value* obj
+        = &libcasm_rt::Value::get( value, m_module );
+    
     libcsel_ir::CallInstruction* call = new libcsel_ir::CallInstruction( obj );
     assert( call );
 
-    libcsel_ir::Value* lhs = m_reference[ &value.lhs() ];
-    assert( lhs );
-    call->add( lhs );
+    // libcsel_ir::Value* lhs = m_reference[ &value.lhs() ];
+    // assert( lhs );
+    // call->add( lhs );
 
-    libcsel_ir::Value* rhs = m_reference[ &value.rhs() ];
-    assert( rhs );
-    call->add( rhs );
+    // libcsel_ir::Value* rhs = m_reference[ &value.rhs() ];
+    // assert( rhs );
+    // call->add( rhs );
 
-    libcsel_ir::AllocInstruction* result = new libcsel_ir::AllocInstruction(
-        &obj->outParameters()[ 0 ]->type() );
-    assert( result );
-    call->add( result );
-    m_reference[&value ] = result;
+    // libcsel_ir::AllocInstruction* result = new libcsel_ir::AllocInstruction(
+    //     &obj->outParameters()[ 0 ]->type() );
+    // assert( result );
+    // call->add( result );
+    // m_reference[&value ] = result;
 
-    libcasm_ir::Value* parent = (libcasm_ir::Value*)value.statement();
-    assert( parent );
-    libcsel_ir::Statement* stmt = (libcsel_ir::Statement*)m_reference[ parent ];
-    assert( stmt );
-    stmt->add( call );
+    // libcasm_ir::Value* parent = (libcasm_ir::Value*)value.statement();
+    // assert( parent );
+    // libcsel_ir::Statement* stmt = (libcsel_ir::Statement*)m_reference[ parent ];
+    // assert( stmt );
+    // stmt->add( call );
 }
 void CasmIRToCselIRPass::visit_epilog(
     libcasm_ir::AddInstruction& value, libcasm_ir::Context& )
@@ -974,30 +975,31 @@ void CasmIRToCselIRPass::visit_epilog(
 void CasmIRToCselIRPass::visit_prolog(
     libcasm_ir::DivInstruction& value, libcasm_ir::Context& )
 {
-    libcsel_ir::CallableUnit* obj
-        = libcasm_rt::Instruction::create( value, m_module );
+    libcsel_ir::Value* obj
+        = &libcasm_rt::Value::get( value, m_module );
+    
     libcsel_ir::CallInstruction* call = new libcsel_ir::CallInstruction( obj );
     assert( call );
 
-    libcsel_ir::Value* lhs = m_reference[ &value.lhs() ];
-    assert( lhs );
-    call->add( lhs );
+    // libcsel_ir::Value* lhs = m_reference[ &value.lhs() ];
+    // assert( lhs );
+    // call->add( lhs );
 
-    libcsel_ir::Value* rhs = m_reference[ &value.rhs() ];
-    assert( rhs );
-    call->add( rhs );
+    // libcsel_ir::Value* rhs = m_reference[ &value.rhs() ];
+    // assert( rhs );
+    // call->add( rhs );
 
-    libcsel_ir::AllocInstruction* result = new libcsel_ir::AllocInstruction(
-        &obj->outParameters()[ 0 ]->type() );
-    assert( result );
-    call->add( result );
-    m_reference[&value ] = result;
+    // libcsel_ir::AllocInstruction* result = new libcsel_ir::AllocInstruction(
+    //     &obj->outParameters()[ 0 ]->type() );
+    // assert( result );
+    // call->add( result );
+    // m_reference[&value ] = result;
 
-    libcasm_ir::Value* parent = (libcasm_ir::Value*)value.statement();
-    assert( parent );
-    libcsel_ir::Statement* stmt = (libcsel_ir::Statement*)m_reference[ parent ];
-    assert( stmt );
-    stmt->add( call );
+    // libcasm_ir::Value* parent = (libcasm_ir::Value*)value.statement();
+    // assert( parent );
+    // libcsel_ir::Statement* stmt = (libcsel_ir::Statement*)m_reference[ parent ];
+    // assert( stmt );
+    // stmt->add( call );
 }
 void CasmIRToCselIRPass::visit_epilog(
     libcasm_ir::DivInstruction& value, libcasm_ir::Context& )
@@ -1040,30 +1042,31 @@ void CasmIRToCselIRPass::visit_epilog(
 void CasmIRToCselIRPass::visit_prolog(
     libcasm_ir::EquInstruction& value, libcasm_ir::Context& )
 {
-    libcsel_ir::CallableUnit* obj
-        = libcasm_rt::Instruction::create( value, m_module );
+    libcsel_ir::Value* obj
+        = &libcasm_rt::Value::get( value, m_module );
+    
     libcsel_ir::CallInstruction* call = new libcsel_ir::CallInstruction( obj );
     assert( call );
 
-    libcsel_ir::Value* lhs = m_reference[ &value.lhs() ];
-    assert( lhs );
-    call->add( lhs );
+    // libcsel_ir::Value* lhs = m_reference[ &value.lhs() ];
+    // assert( lhs );
+    // call->add( lhs );
 
-    libcsel_ir::Value* rhs = m_reference[ &value.rhs() ];
-    assert( rhs );
-    call->add( rhs );
+    // libcsel_ir::Value* rhs = m_reference[ &value.rhs() ];
+    // assert( rhs );
+    // call->add( rhs );
 
-    libcsel_ir::AllocInstruction* result = new libcsel_ir::AllocInstruction(
-        &obj->outParameters()[ 0 ]->type() );
-    assert( result );
-    call->add( result );
-    m_reference[&value ] = result;
+    // libcsel_ir::AllocInstruction* result = new libcsel_ir::AllocInstruction(
+    //     &obj->outParameters()[ 0 ]->type() );
+    // assert( result );
+    // call->add( result );
+    // m_reference[&value ] = result;
 
-    libcasm_ir::Value* parent = (libcasm_ir::Value*)value.statement();
-    assert( parent );
-    libcsel_ir::Statement* stmt = (libcsel_ir::Statement*)m_reference[ parent ];
-    assert( stmt );
-    stmt->add( call );
+    // libcasm_ir::Value* parent = (libcasm_ir::Value*)value.statement();
+    // assert( parent );
+    // libcsel_ir::Statement* stmt = (libcsel_ir::Statement*)m_reference[ parent ];
+    // assert( stmt );
+    // stmt->add( call );
 }
 void CasmIRToCselIRPass::visit_epilog(
     libcasm_ir::EquInstruction& value, libcasm_ir::Context& )
