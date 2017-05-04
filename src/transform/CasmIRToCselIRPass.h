@@ -21,13 +21,10 @@
 //  along with libcasm-be. If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef _LIB_CASMBE_CASMIRTOCSELIRPASS_H_
-#define _LIB_CASMBE_CASMIRTOCSELIRPASS_H_
+#ifndef _LIB_CASMBE_CASM_IR_TO_CSEL_IR_PASS_H_
+#define _LIB_CASMBE_CASM_IR_TO_CSEL_IR_PASS_H_
 
-#include "libpass.h"
-
-#include "libcasm-ir.h"
-#include "libcsel-ir.h"
+#include "../casm-ir/src/analyze/ConsistencyCheckPass.h"
 
 /**
    @brief    TODO
@@ -37,32 +34,20 @@
 
 namespace libcasm_be
 {
-    class CasmIRToCselIRPass final : public libpass::Pass,
-                                     public libcasm_ir::Visitor
+    class CasmIRToCselIRPass final : public libpass::Pass
     {
-      private:
-        libcsel_ir::Module* m_module;
-
-        std::unordered_map< libcasm_ir::Value*, libcsel_ir::Value* >
-            m_reference;
-
       public:
         static char id;
 
-        bool run( libpass::PassResult& pr ) override;
+        void usage( libpass::PassUsage& pu ) override;
+        
+        u1 run( libpass::PassResult& pr ) override;
 
-        libcsel_ir::Module* module( void ) const;
-
-        LIB_CASMIR_VISITOR_INTERFACE;
-
-      private:
-        libcsel_ir::Structure* factory( libcasm_ir::Type* type );
-
-        libcsel_ir::Value* constant( libcsel_ir::Type* type );
+        using Data = libcasm_ir::ConsistencyCheckPass;
     };
 }
 
-#endif /* _LIB_CASMBE_CASMIRTOCSELIRPASS_H_ */
+#endif // _LIB_CASMBE_CASM_IR_TO_CSEL_IR_PASS_H_
 
 //
 //  Local variables:
