@@ -21,8 +21,8 @@
 //  along with libcasm-be. If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef _LIB_CASMBE_CASM_IR_TO_CSEL_IR_PASS_H_
-#define _LIB_CASMBE_CASM_IR_TO_CSEL_IR_PASS_H_
+#ifndef _LIB_CASMBE_CASM_IR_TO_CJEL_IR_PASS_H_
+#define _LIB_CASMBE_CASM_IR_TO_CJEL_IR_PASS_H_
 
 #include "../casm-ir/src/analyze/ConsistencyCheckPass.h"
 
@@ -34,7 +34,7 @@
 
 namespace libcasm_be
 {
-    class CasmIRToCselIRPass final : public libpass::Pass
+    class CasmIRToCjelIRPass final : public libpass::Pass
     {
       public:
         static char id;
@@ -47,7 +47,7 @@ namespace libcasm_be
     };
 }
 
-#endif // _LIB_CASMBE_CASM_IR_TO_CSEL_IR_PASS_H_
+#endif // _LIB_CASMBE_CASM_IR_TO_CJEL_IR_PASS_H_
 
 //
 //  Local variables:

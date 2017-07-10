@@ -32,7 +32,7 @@ endif()
 foreach( DEPENDENCY
     stdhl
     pass
-    csel-ir
+    cjel-ir
     casm-ir
     casm-rt
     )
@@ -58,7 +58,7 @@ include_directories(
   ${LIBS}/hayai/src
   ${LIBS}/stdhl
   ${LIBS}/pass
-  ${LIBS}/csel-ir
+  ${LIBS}/cjel-ir
   ${LIBS}/casm-ir
   ${LIBS}/casm-rt
 )
@@ -90,7 +90,7 @@ target_link_libraries( ${TARGET}-check
   ${TARGET}
   casm-rt
   casm-ir
-  csel-ir
+  cjel-ir
   pass
   stdhl
   pthread
@@ -111,7 +111,7 @@ target_link_libraries( ${TARGET}-run
   ${TARGET}
   casm-rt
   casm-ir
-  csel-ir
+  cjel-ir
   pass
   stdhl
   pthread

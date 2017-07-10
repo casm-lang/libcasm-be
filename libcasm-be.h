@@ -27,7 +27,7 @@
 // #include "src/Backend.h"
 // #include "src/LLCodeBackend.h"
 
-#include "src/transform/CasmIRToCselIRPass.h"
+#include "src/transform/CasmIRToCjelIRPass.h"
 
 namespace libcasm_be
 {

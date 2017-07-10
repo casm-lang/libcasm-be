@@ -10,9 +10,9 @@
 [submodule "lib/pass"]
 	path = lib/pass
 	url = https://github.com/ppaulweber/libpass
-[submodule "lib/csel-ir"]
-	path = lib/csel-ir
-	url = git@github.com:casm-lang/libcsel-ir
+[submodule "lib/cjel-ir"]
+	path = lib/cjel-ir
+	url = git@github.com:casm-lang/libcjel-ir
 [submodule "lib/casm-ir"]
 	path = lib/casm-ir
 	url = git@github.com:casm-lang/libcasm-ir
