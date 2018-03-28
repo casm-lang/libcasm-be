@@ -54,8 +54,9 @@
 
 namespace libcasm_be
 {
-
-    class CasmIRToLLCodePass : public libpass::Pass, public LLCodeBackend
+    class CasmIRToLLCodePass
+    : public libpass::Pass
+    , public LLCodeBackend
     {
       public:
         static char id;

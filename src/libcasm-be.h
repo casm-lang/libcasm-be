@@ -39,19 +39,17 @@
 //  statement from your version.
 //
 
-#ifndef _LIB_CASMBE_H_
-#define _LIB_CASMBE_H_
+#ifndef _LIBCASM_BE_H_
+#define _LIBCASM_BE_H_
 
-// #include "src/Backend.h"
-// #include "src/LLCodeBackend.h"
-
-#include "src/transform/CasmIRToCjelIRPass.h"
+#include <libcasm-be/Version>
+#include <libcasm-be/transform/CasmIRToCjelIRPass>
 
 namespace libcasm_be
 {
 }
 
-#endif // _LIB_CASM_BE_H_
+#endif  // _LIBCASM_BE_H_
 
 //
 //  Local variables:

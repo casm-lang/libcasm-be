@@ -103,7 +103,7 @@ namespace libcasm_be
     };
 }
 
-#endif // _LIB_CASMBE_BACKEND_H_
+#endif  // _LIB_CASMBE_BACKEND_H_
 
 //
 //  Local variables:

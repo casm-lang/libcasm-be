@@ -41,6 +41,8 @@
 
 #include "CasmIRToCjelIRPass.h"
 
+#include <libpass/PassRegistry>
+
 using namespace libcasm_be;
 
 char CasmIRToCjelIRPass::id = 0;
@@ -58,15 +60,15 @@ void CasmIRToCjelIRPass::usage( libpass::PassUsage& pu )
 
 u1 CasmIRToCjelIRPass::run( libpass::PassResult& pr )
 {
-    const auto data = pr.result< libcasm_ir::ConsistencyCheckPass >();
-    const auto specification = data->specification();
+    // const auto data = pr.result< libcasm_ir::ConsistencyCheckPass >();
+    // const auto specification = data->specification();
 
-    // specification->iterate( libcasm_ir::Traversal::PREORDER, this );
+    // // specification->iterate( libcasm_ir::Traversal::PREORDER, this );
 
-    // pr.setResult< CasmIRToCjelIRPass >( m_module );
-    // pr.setResult< libcjel_ir::CjelIRDumpPass >( m_module );
+    // // pr.setResult< CasmIRToCjelIRPass >( m_module );
+    // // pr.setResult< libcjel_ir::CjelIRDumpPass >( m_module );
 
-    assert( 0 ); // TODO
+    // assert( 0 );  // TODO
 
     return true;
 }

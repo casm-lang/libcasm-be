@@ -39,10 +39,15 @@
 //  statement from your version.
 //
 
-#ifndef _LIB_CASMBE_CASM_IR_TO_CJEL_IR_PASS_H_
-#define _LIB_CASMBE_CASM_IR_TO_CJEL_IR_PASS_H_
+#ifndef _LIBCASM_BE_CASM_IR_TO_CJEL_IR_PASS_H_
+#define _LIBCASM_BE_CASM_IR_TO_CJEL_IR_PASS_H_
 
-#include "../casm-ir/src/analyze/ConsistencyCheckPass.h"
+#include <libpass/Pass>
+#include <libpass/PassData>
+#include <libpass/PassResult>
+#include <libpass/PassUsage>
+
+#include <libcasm-ir/analyze/ConsistencyCheckPass>
 
 /**
    @brief    TODO
@@ -58,14 +63,14 @@ namespace libcasm_be
         static char id;
 
         void usage( libpass::PassUsage& pu ) override;
-        
+
         u1 run( libpass::PassResult& pr ) override;
 
         using Data = libcasm_ir::ConsistencyCheckPass;
     };
 }
 
-#endif // _LIB_CASMBE_CASM_IR_TO_CJEL_IR_PASS_H_
+#endif  // _LIBCASM_BE_CASM_IR_TO_CJEL_IR_PASS_H_
 
 //
 //  Local variables:

@@ -39,22 +39,15 @@
 //  statement from your version.
 //
 
-#include "uts/main.h"
+#include "main.h"
 
-void libcasm_be_main_dummy( void )
+TEST( libcasm_be__main, empty )
 {
-    const auto source = libstdhl::make< libstdhl::Log::Source >(
-        "libcasm-be", "CASM BE Library" );
-
-    libstdhl::Log::defaultSource( source );
-}
-
-TEST( libcasm_be_main, empty )
-{
-}
-
-BENCHMARK( libcasm_be_main, empty, 10, 10 )
-{
+    std::cout << libcasm_be::REVTAG << "\n";
+    std::cout << libcasm_be::COMMIT << "\n";
+    std::cout << libcasm_be::BRANCH << "\n";
+    std::cout << libcasm_be::LICENSE << "\n";
+    std::cout << libcasm_be::NOTICE << "\n";
 }
 
 //

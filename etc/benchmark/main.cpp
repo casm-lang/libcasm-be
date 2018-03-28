@@ -39,8 +39,18 @@
 //  statement from your version.
 //
 
-#include "gtest/gtest.h"
+#include <hayai/hayai.hpp>
 
-TEST( libcasm_be, example )
+BENCHMARK( libcasm_be, main, 0, 0 )
 {
 }
+
+//
+//  Local variables:
+//  mode: c++
+//  indent-tabs-mode: nil
+//  c-basic-offset: 4
+//  tab-width: 4
+//  End:
+//  vim:noexpandtab:sw=4:ts=4:
+//

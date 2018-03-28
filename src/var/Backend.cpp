@@ -84,9 +84,9 @@ void Backend::emit( FILE* f, Value* ir )
             emit( f, ( (AssertInstruction*)ir ) );
             break;
 
-        // case Value::BRANCH_INSTRUCTION:
-        //     emit( f, ( (BranchInstruction*)ir ) );
-        //     break;
+            // case Value::BRANCH_INSTRUCTION:
+            //     emit( f, ( (BranchInstruction*)ir ) );
+            //     break;
 
         case Value::SKIP_INSTRUCTION: /*nop*/
             break;
@@ -167,8 +167,7 @@ void Backend::emit( FILE* f, Value* ir )
 
         default:
         {
-            printf( "%s:%i: %s: %u\n", __FILE__, __LINE__, __FUNCTION__,
-                ir->getValueID() );
+            printf( "%s:%i: %s: %u\n", __FILE__, __LINE__, __FUNCTION__, ir->getValueID() );
             ir->dump();
             assert( 0 && "unimplemented value to distribute an emit!" );
         }

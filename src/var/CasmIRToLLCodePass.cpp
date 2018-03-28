@@ -66,16 +66,15 @@ bool CasmIRToLLCodePass::run( libpass::PassResult& pr )
         output = fopen( output_name, "w" );
     }
 
-    printf(
-        "%s:%i: [%s] '%s'\n", __FILE__, __LINE__, __FUNCTION__, output_name );
+    printf( "%s:%i: [%s] '%s'\n", __FILE__, __LINE__, __FUNCTION__, output_name );
 
     libcasm_ir::Value::SymbolTable& symbols = *libcasm_ir::Value::getSymbols();
 
     const char* init_rule = 0;
     for( auto value : symbols[ ".agent" ] )
     {
-        libcasm_ir::RulePointerConstant* rule_ptr
-            = ( (libcasm_ir::Agent*)value )->getInitRulePointer();
+        libcasm_ir::RulePointerConstant* rule_ptr =
+            ( (libcasm_ir::Agent*)value )->getInitRulePointer();
 
         if( rule_ptr )
         {
@@ -99,18 +98,15 @@ bool CasmIRToLLCodePass::run( libpass::PassResult& pr )
         {
             emit( output, ( (libcasm_ir::AgentConstant*)value ) );
         }
-        else if( libcasm_ir::Value::isa< libcasm_ir::RulePointerConstant >(
-                     value ) )
+        else if( libcasm_ir::Value::isa< libcasm_ir::RulePointerConstant >( value ) )
         {
             emit( output, ( (libcasm_ir::RulePointerConstant*)value ) );
         }
-        else if( libcasm_ir::Value::isa< libcasm_ir::BooleanConstant >(
-                     value ) )
+        else if( libcasm_ir::Value::isa< libcasm_ir::BooleanConstant >( value ) )
         {
             emit( output, ( (libcasm_ir::BooleanConstant*)value ) );
         }
-        else if( libcasm_ir::Value::isa< libcasm_ir::IntegerConstant >(
-                     value ) )
+        else if( libcasm_ir::Value::isa< libcasm_ir::IntegerConstant >( value ) )
         {
             emit( output, ( (libcasm_ir::IntegerConstant*)value ) );
         }
@@ -162,22 +158,23 @@ bool CasmIRToLLCodePass::run( libpass::PassResult& pr )
 #define IND "  "
 #define LF "\n"
 
-    fprintf( output,
+    fprintf(
+        output,
         // LF ""
         // LF "target datalayout = \"e-m:e-i64:64-f80:128-n8:16:32:64-S128\""
         // LF "target triple = \"x86_64-pc-linux-gnu\""
         // LF ""
-        LF "define i8 @main( i32 %%args, i8** %%argv ) nounwind" LF "{" LF
-           "begin:" LF IND "%%p = call i8* @program.location( i8* null )" LF IND
+        LF "define i8 @main( i32 %%args, i8** %%argv ) nounwind" LF "{" LF "begin:" LF IND
+           "%%p = call i8* @program.location( i8* null )" LF IND
            "%%r = bitcast i8* %%p to %%libcasm-rt.Rule*" LF IND
            "call void @libcasm-rt.set.Rule.ptr"
            "( %%libcasm-rt.Rule* %%r, %%libcasm-rt.RuleAddr @%s )" LF IND
            "%%mem  = alloca %%stdll.mem" LF IND
-           "call i8 @stdll.mem.new( %%stdll.mem* %%mem, i64 %u )" LF IND
-           "" LF IND "call void @libcasm-rt.main( %%stdll.mem* %%mem )" LF IND
-           "call i8 @stdll.mem.del( %%stdll.mem* %%mem )" LF IND "ret i8 0" LF
-           "}" LF,
-        init_rule, 256000000 );
+           "call i8 @stdll.mem.new( %%stdll.mem* %%mem, i64 %u )" LF IND "" LF IND
+           "call void @libcasm-rt.main( %%stdll.mem* %%mem )" LF IND
+           "call i8 @stdll.mem.del( %%stdll.mem* %%mem )" LF IND "ret i8 0" LF "}" LF,
+        init_rule,
+        256000000 );
 
     return false;
 }

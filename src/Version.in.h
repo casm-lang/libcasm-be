@@ -39,14 +39,27 @@
 //  statement from your version.
 //
 
-#ifndef _LIB_CASMBE_UTS_MAIN_H_
-#define _LIB_CASMBE_UTS_MAIN_H_
+#ifndef _LIBCASM_BE_VERSION_H_
+#define _LIBCASM_BE_VERSION_H_
 
-#include "../stdhl/uts/main.h"
+/**
+   @brief    TODO
 
-#include "libcasm-be.h"
+   TODO
 
-#endif // _LIB_CASMBE_UTS_MAIN_H_
+   variables are automatically set by CMake
+*/
+
+namespace libcasm_be
+{
+    constexpr const char* REVTAG = "@GIT_REVTAG@";
+    constexpr const char* COMMIT = "@GIT_COMMIT@";
+    constexpr const char* BRANCH = "@GIT_BRANCH@";
+    constexpr const char* LICENSE = "@GIT_LICENSE@";
+    constexpr const char* NOTICE = "@GIT_NOTICE@";
+}
+
+#endif  // _LIBCASM_BE_VERSION_H_
 
 //
 //  Local variables:

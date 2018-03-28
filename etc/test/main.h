@@ -39,8 +39,21 @@
 //  statement from your version.
 //
 
-#include "gtest/gtest.h"
+#ifndef _LIBCASM_BE_TEST_MAIN_H_
+#define _LIBCASM_BE_TEST_MAIN_H_
 
-TEST( libcasm_be__subject, example )
-{
-}
+#include <libstdhl/Test>
+
+#include <libcasm-be/libcasm-be>
+
+#endif  // _LIBCASM_BE_TEST_MAIN_H_
+
+//
+//  Local variables:
+//  mode: c++
+//  indent-tabs-mode: nil
+//  c-basic-offset: 4
+//  tab-width: 4
+//  End:
+//  vim:noexpandtab:sw=4:ts=4:
+//

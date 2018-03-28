@@ -54,18 +54,16 @@ namespace libcasm_be
         u1 derived_mode;
 
         std::unordered_map< libcasm_ir::Value*, std::string > register_cache;
-        const char* getRegister(
-            libcasm_ir::Value* value, u1 let_flag = false );
+        const char* getRegister( libcasm_ir::Value* value, u1 let_flag = false );
 
         void lifetime_start( FILE* f, libcasm_ir::Instruction* ir );
         void lifetime_end( FILE* f, libcasm_ir::Instruction* ir );
 
-        void emit_constant( FILE* f, libcasm_ir::Value* ir, const char* ty,
-            const char* val, u1 def );
+        void emit_constant(
+            FILE* f, libcasm_ir::Value* ir, const char* ty, const char* val, u1 def );
         void emit_scope( FILE* f, libcasm_ir::ExecutionSemanticsBlock* ir );
         void emit_statement( FILE* f, libcasm_ir::Statement* ir );
-        void emit_instruction(
-            FILE* f, libcasm_ir::Instruction* ir, const char* alias );
+        void emit_instruction( FILE* f, libcasm_ir::Instruction* ir, const char* alias );
 
       protected:
         virtual void emit( FILE* f, libcasm_ir::AgentConstant* ir );
@@ -118,7 +116,7 @@ namespace libcasm_be
     };
 }
 
-#endif // _LIB_CASMBE_LLCODEBACKED_H_
+#endif  // _LIB_CASMBE_LLCODEBACKED_H_
 
 //
 //  Local variables:
