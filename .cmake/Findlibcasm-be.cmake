@@ -39,14 +39,35 @@
 #   statement from your version.
 #
 
-TARGET = libcasm-be
+# LIBCASM_BE_FOUND        - system has found the package
+# LIBCASM_BE_INCLUDE_DIRS - the package include directories
+# LIBCASM_BE_LIBRARY      - the package library
 
-FORMAT  = src
-FORMAT += src/*
-FORMAT += etc
-FORMAT += etc/*
-FORMAT += etc/*/*
+include( LibPackage )
 
-UPDATE_ROOT = ../stdhl
+libfind_pkg_check_modules( LIBCASM_BE_PKGCONF libcasm-be )
 
-include .cmake/config.mk
+find_path( LIBCASM_BE_INCLUDE_DIR
+  NAMES libcasm-be/libcasm-be.h
+  PATHS ${LIBCASM_BE_PKGCONF_INCLUDE_DIRS}
+  )
+
+find_library( LIBCASM_BE_LIBRARY
+  NAMES libcasm-be casm-be
+  PATHS ${LIBCASM_BE_PKGCONF_LIBRARY_DIRS}
+  )
+
+set( LIBCASM_BE_PROCESS_INCLUDES LIBCASM_BE_INCLUDE_DIR )
+set( LIBCASM_BE_PROCESS_LIBS     LIBCASM_BE_LIBRARY )
+
+libfind_process( LIBCASM_BE )
+
+if( EXISTS "${LIBCASM_BE_INCLUDE_DIR}" AND
+    EXISTS "${LIBCASM_BE_LIBRARY}" AND
+    ${LIBCASM_BE_INCLUDE_DIR} AND
+    ${LIBCASM_BE_LIBRARY}
+    )
+  set( LIBCASM_BE_FOUND TRUE PARENT_SCOPE )
+else()
+  set( LIBCASM_BE_FOUND FALSE PARENT_SCOPE )
+endif()
