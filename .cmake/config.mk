@@ -1,9 +1,9 @@
 #
-#   Copyright (C) 2015-2022 CASM Organization <https://casm-lang.org>
+#   Copyright (C) 2015-2023 CASM Organization <https://casm-lang.org>
 #   All rights reserved.
 #
 #   Developed by: Philipp Paulweber et al.
-#                 <https://github.com/casm-lang/libcasm-be/graphs/contributors>
+#   <https://github.com/casm-lang/libcasm-be/graphs/contributors>
 #
 #   This file is part of libcasm-be.
 #
@@ -181,7 +181,7 @@ license: $(UPDATE_ROOT:%=%-license) $(UPDATE_PATH:%=%-license)
 %-license:
 	@echo "-- Relicense: $(patsubst %-update,%,$@)"
 	@(cd $(patsubst %-update,%,$@); \
-	  python2 $(UPDATE_ROOT)/src/py/Licenser.py \
+	  python $(UPDATE_ROOT)/src/py/Licenser.py \
 	)
 
 license-info:
